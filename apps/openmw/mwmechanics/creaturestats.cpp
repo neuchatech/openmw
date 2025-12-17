@@ -155,6 +155,41 @@ namespace MWMechanics
         }
     }
 
+    void CreatureStats::takeDamage(float damage, DamageSourceType source)
+    {
+        if (damage <= 0.f)
+            return;
+
+        // Stamina Shield Logic: Physical damage drains Fatigue first
+        if (source == DamageSourceType::Melee || source == DamageSourceType::Ranged)
+        {
+            DynamicStat<float> fatigue = getFatigue();
+            float currentFatigue = fatigue.getCurrent();
+
+            if (currentFatigue > 0.f)
+            {
+                // Sprint 4: Smart Fatigue - 3x Damage to Fatigue Only
+                // Damage is multiplied by 3 for fatigue absorption calculation.
+                // If fatigue absorbs it, we subtract the *unmultiplied* amount from the health damage.
+                float fatigueDamage = damage * 3.0f;
+                float absorbed = std::min(currentFatigue, fatigueDamage);
+                
+                fatigue.setCurrent(currentFatigue - absorbed);
+                setFatigue(fatigue);
+
+                // Reduce actual health damage by the amount absorbed (converted back to health units)
+                damage -= (absorbed / 3.0f);
+            }
+        }
+
+        if (damage > 0.f)
+        {
+            DynamicStat<float> health = getHealth();
+            health.setCurrent(health.getCurrent() - damage);
+            setHealth(health);
+        }
+    }
+
     void CreatureStats::setHealth(const DynamicStat<float>& value)
     {
         setDynamic(0, value);
@@ -166,10 +201,14 @@ namespace MWMechanics
     }
 
     void CreatureStats::setFatigue(const DynamicStat<float>& value)
+{
+    // Sprint 3: Reset fatigue delay timer if fatigue decreases
+    if (value.getCurrent() < mDynamic[2].getCurrent())
     {
-        setDynamic(2, value);
+        mFatigueDelayTimer = 1.0f;
     }
-
+    mDynamic[2] = value;
+}
     void CreatureStats::setDynamic(int index, const DynamicStat<float>& value)
     {
         if (index < 0 || index > 2)

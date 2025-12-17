@@ -13,6 +13,7 @@
 #include "magiceffects.hpp"
 #include "spells.hpp"
 #include "stat.hpp"
+#include "damagesourcetype.hpp"
 
 #include <components/esm/attr.hpp>
 #include <components/esm/refid.hpp>
@@ -93,6 +94,9 @@ namespace MWMechanics
         float mAwarenessTimer = 0.f;
         int mAwarenessRoll = -1;
 
+        // Sprint 3: Fatigue Regen Delay
+        float mFatigueDelayTimer = 0.f;
+
     protected:
         std::string mAttackType;
         int mLevel = 0;
@@ -149,6 +153,8 @@ namespace MWMechanics
         void setAttribute(ESM::RefId id, const AttributeValue& value);
         // Shortcut to set only the base
         void setAttribute(ESM::RefId id, float base);
+
+        void takeDamage(float damage, DamageSourceType source);
 
         void setHealth(const DynamicStat<float>& value);
 
@@ -306,6 +312,9 @@ namespace MWMechanics
 
         void updateAwareness(float duration);
         int getAwarenessRoll();
+
+        float getFatigueDelayTimer() const { return mFatigueDelayTimer; }
+        void setFatigueDelayTimer(float value) { mFatigueDelayTimer = value; }
     };
 }
 

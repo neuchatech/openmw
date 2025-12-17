@@ -396,9 +396,7 @@ namespace MWMechanics
             // Note swapped victim and attacker, since the attacker takes the damage here.
             x = scaleDamage(x, victim, attacker);
 
-            MWMechanics::DynamicStat<float> health = attackerStats.getHealth();
-            health.setCurrent(health.getCurrent() - x);
-            attackerStats.setHealth(health);
+            attackerStats.takeDamage(x, DamageSourceType::Magical); // Elemental shields are magical damage
 
             MWBase::Environment::get().getSoundManager()->playSound3D(
                 attacker, ESM::RefId::stringRefId("Health Damage"), 1.0f, 1.0f);
@@ -540,6 +538,10 @@ namespace MWMechanics
             float fatigueLoss = fFatigueAttackBase + normalizedEncumbrance * fFatigueAttackMult;
             if (!weapon.isEmpty())
                 fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueMult;
+            
+            // Sprint 6: Restore High Costs (5x) for everyone
+            fatigueLoss *= 5.0f;
+
             fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
             stats.setFatigue(fatigue);
         }

@@ -6,6 +6,9 @@
         <Widget type="ProgressBar" skin="MW_EnergyBar_Yellow" position="13 131 65 12" align="Left Bottom" name="EnemyHealth">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="ProgressBar" skin="MW_EnergyBar_Green" position="82 131 65 12" align="Left Bottom" name="EnemyFatigue">
+            <Property key="Visible" value="false"/>
+        </Widget>
         <Widget type="Button" skin="" position="13 146 65 12" align="Left Bottom" name="HealthFrame">
             <UserString key="ToolTipType" value="Layout"/>
             <UserString key="ToolTipLayout" value="HealthToolTip"/>

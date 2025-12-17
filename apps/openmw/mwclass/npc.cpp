@@ -645,6 +645,12 @@ namespace MWClass
             if (attack)
             {
                 damage = attack[0] + ((attack[1] - attack[0]) * attackStrength);
+                // Heavy Attack Rebalancing: Scale damage up to 4x at full charge
+                // This makes fully charged attacks significantly more impactful.
+                if (attackStrength > 0.0f)
+                {
+                    damage *= (1.0f + 3.0f * attackStrength);
+                }
             }
             MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
             MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
@@ -774,9 +780,7 @@ namespace MWClass
             {
                 hasHealthDamage = true;
                 healthDamage = damage;
-                MWMechanics::DynamicStat<float> health(getCreatureStats(ptr).getHealth());
-                health.setCurrent(health.getCurrent() - damage);
-                stats.setHealth(health);
+                stats.takeDamage(damage, sourceType);
             }
             else if (stat == "fatigue")
             {

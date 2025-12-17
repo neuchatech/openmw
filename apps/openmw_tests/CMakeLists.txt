@@ -18,6 +18,8 @@ file(GLOB UNITTEST_SRC_FILES
     mwgui/weightedsearch.cpp
 
     mwscript/testscripts.cpp
+
+    mwmechanics/testcreaturestats.cpp
 )
 
 source_group(apps\\openmw-tests FILES ${UNITTEST_SRC_FILES})

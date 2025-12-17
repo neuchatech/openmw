@@ -326,6 +326,12 @@ namespace MWClass
             if (attack)
             {
                 damage = attack[0] + ((attack[1] - attack[0]) * attackStrength);
+                // Sprint 2: Heavy Attack Damage Scaling
+                // Sprint 2: Heavy Attack Damage Scaling
+                if (attackStrength > 0.0f)
+                {
+                    damage *= (1.0f + 3.0f * attackStrength);
+                }
                 MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
                 MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
                 MWMechanics::resistNormalWeapon(victim, ptr, weapon, damage);
@@ -419,9 +425,7 @@ namespace MWClass
             {
                 hasHealthDamage = true;
                 healthDamage = damage;
-                MWMechanics::DynamicStat<float> health(getCreatureStats(ptr).getHealth());
-                health.setCurrent(health.getCurrent() - damage);
-                stats.setHealth(health);
+                stats.takeDamage(damage, sourceType);
             }
             else if (stat == "fatigue")
             {

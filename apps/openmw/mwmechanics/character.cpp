@@ -2376,6 +2376,36 @@ namespace MWMechanics
             {
                 refreshCurrentAnims(idlestate, movestate, jumpstate, updateWeaponState());
                 updateIdleStormState(inwater);
+
+                // Heavy Attack Rebalancing: Slow down windup to target 1.0s
+                if (mUpperBodyState == UpperBodyState::AttackWindUp && !mCurrentWeapon.empty() && mAnimation
+                    && mWeaponType != ESM::Weapon::PickProbe && !isRandomAttackAnimation(mCurrentWeapon))
+                {
+                    float minAttackTime = mAnimation->getTextKeyTime(mCurrentWeapon + ": " + mAttackType + " min attack");
+                    float maxAttackTime = mAnimation->getTextKeyTime(mCurrentWeapon + ": " + mAttackType + " max attack");
+                    float currentTime = mAnimation->getCurrentTime(mCurrentWeapon);
+
+                    float weapSpeed = 1.f;
+                    if (!mWeapon.isEmpty() && mWeapon.getType() == ESM::Weapon::sRecordId)
+                        weapSpeed = mWeapon.get<ESM::Weapon>()->mBase->mData.mSpeed;
+
+                    if (minAttackTime != -1.f && maxAttackTime != -1.f && maxAttackTime > minAttackTime)
+                    {
+                        if (currentTime >= minAttackTime && currentTime < maxAttackTime)
+                        {
+                            // In charging phase: slow down to reach 1.0s duration
+                            float nativeDuration = maxAttackTime - minAttackTime;
+                            float targetDuration = 1.0f;
+                            float speedFactor = nativeDuration / targetDuration;
+                            mAnimation->adjustSpeedMult(mCurrentWeapon, weapSpeed * speedFactor);
+                        }
+                        else
+                        {
+                            // Outside charging phase (start or release): usage normal speed
+                            mAnimation->adjustSpeedMult(mCurrentWeapon, weapSpeed);
+                        }
+                    }
+                }
             }
 
             if (isTurning())

@@ -64,7 +64,7 @@ namespace MWGui
         void dropDraggedItem(float mouseX, float mouseY);
 
     private:
-        MyGUI::ProgressBar *mHealth, *mMagicka, *mStamina, *mEnemyHealth, *mDrowning;
+        MyGUI::ProgressBar *mHealth, *mMagicka, *mStamina, *mEnemyHealth, *mEnemyStamina, *mDrowning;
         MyGUI::Widget* mHealthFrame;
         MyGUI::Widget *mWeapBox, *mSpellBox, *mSneakBox;
         ItemWidget* mWeapImage;

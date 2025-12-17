@@ -919,6 +919,35 @@ namespace MWMechanics
             return;
 
         // Restore fatigue
+        // Sprint 3: Fatigue Delay & Faster Regen
+        
+        // Update Delay Timer
+        float delayTimer = stats.getFatigueDelayTimer();
+        if (delayTimer > 0.f)
+        {
+            delayTimer -= duration;
+            stats.setFatigueDelayTimer(delayTimer);
+            
+            // Sprint 6: AI Continuous Regen
+            // Only enforce delay for the player. AI regenerates constantly.
+            if (ptr == getPlayer())
+                return; // No regen while timer is active
+        }
+
+        // Sprint 4: Health-Gated Regen
+        // Fatigue can only regen up to the % of current health
+        DynamicStat<float> health = stats.getHealth();
+        float healthRatio = 1.0f;
+        if (health.getBase() > 0)
+            healthRatio = health.getCurrent() / health.getBase();
+        
+        // Clamp ratio to 0-1
+        healthRatio = std::max(0.0f, std::min(1.0f, healthRatio));
+
+        float maxFatigueCap = fatigue.getBase() * healthRatio;
+        if (fatigue.getCurrent() >= maxFatigueCap)
+            return; // Cap reached
+
         const float endurance = stats.getAttribute(ESM::Attribute::Endurance).getModified();
         const MWWorld::Store<ESM::GameSetting>& settings
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
@@ -927,7 +956,14 @@ namespace MWMechanics
 
         const float x = fFatigueReturnBase + fFatigueReturnMult * endurance;
 
-        fatigue.setCurrent(fatigue.getCurrent() + duration * x);
+        // Apply 5x multiplier to regen rate
+        float restoreAmount = duration * x * 5.0f;
+        float current = fatigue.getCurrent();
+        
+        // Apply restoration but clamp to maxFatigueCap
+        float newFatigue = std::min(maxFatigueCap, current + restoreAmount);
+        
+        fatigue.setCurrent(newFatigue);
         stats.setFatigue(fatigue);
     }
 
