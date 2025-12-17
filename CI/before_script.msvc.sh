@@ -538,6 +538,7 @@ fi
 
 # turn on LTO by default
 add_cmake_opts "-DOPENMW_LTO_BUILD=True"
+add_cmake_opts "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
 
 if [[ -n "$USE_WERROR" ]]; then
   add_cmake_opts "-DOPENMW_MSVC_WERROR=ON"

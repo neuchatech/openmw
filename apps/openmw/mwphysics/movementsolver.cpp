@@ -175,6 +175,10 @@ namespace MWPhysics
                 velocity = velocity + actor.mInertia;
         }
 
+        // 50% speed boost for player
+        if (actor.mIsPlayer)
+            velocity *= 1.5f;
+
         // Now that we have the effective movement vector, apply wind forces to it
         if (worldData.mIsInStorm && velocity.length() > 0)
         {
