@@ -1,6 +1,24 @@
 #!/bin/bash
 # set -x  # turn-on for debugging
 
+# FORCE TOOL FINDING with functions
+function 7z {
+    if [ -f "/c/Program Files/7-Zip/7z.exe" ]; then "/c/Program Files/7-Zip/7z.exe" "$@";
+    elif [ -f "/mnt/c/Program Files/7-Zip/7z.exe" ]; then "/mnt/c/Program Files/7-Zip/7z.exe" "$@";
+    else command 7z "$@"; fi
+}
+function cmake {
+    if [ -f "/c/Program Files/CMake/bin/cmake.exe" ]; then "/c/Program Files/CMake/bin/cmake.exe" "$@";
+    elif [ -f "/mnt/c/Program Files/CMake/bin/cmake.exe" ]; then "/mnt/c/Program Files/CMake/bin/cmake.exe" "$@";
+    else command cmake "$@"; fi
+}
+export -f 7z
+export -f cmake
+
+# Disable original checks
+MISSINGTOOLS=0
+# command -v 7z ...
+# command -v cmake ...
 function wrappedExit {
 	if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 		exit $1
