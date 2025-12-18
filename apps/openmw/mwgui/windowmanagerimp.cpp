@@ -329,9 +329,11 @@ namespace MWGui
         mWindows.push_back(std::move(menu));
 
         mLocalMapRender = std::make_unique<MWRender::LocalMap>(mViewer->getSceneData()->asGroup());
+
         auto map = std::make_unique<MapWindow>(mCustomMarkers, mDragAndDrop.get(), mLocalMapRender.get(), mWorkQueue);
         mMap = map.get();
         mWindows.push_back(std::move(map));
+
         mMap->renderGlobalMap();
         trackWindow(mMap, makeMapWindowSettingValues());
 

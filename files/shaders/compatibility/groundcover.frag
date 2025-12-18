@@ -26,8 +26,7 @@ varying vec2 normalMapUV;
 
 varying float euclideanDepth;
 varying float linearDepth;
-uniform vec2 screenRes;
-uniform float far;
+
 uniform float alphaRef;
 
 #if PER_PIXEL_LIGHTING
@@ -39,10 +38,10 @@ centroid varying vec3 shadowDiffuseLighting;
 
 varying vec3 passNormal;
 
-#include "shadows_fragment.glsl"
+#include "lib/core/fragment.h.glsl"
+#include "fog.glsl"
 #include "lib/light/lighting.glsl"
 #include "lib/material/alpha.glsl"
-#include "fog.glsl"
 #include "compatibility/normals.glsl"
 
 void main()
@@ -83,7 +82,11 @@ void main()
     clampLightingResult(lighting);
 
     gl_FragData[0].xyz *= lighting;
+#if PER_PIXEL_LIGHTING
+    gl_FragData[0] = applyFogAtPos(gl_FragData[0], passViewPos, far);
+#else
     gl_FragData[0] = applyFogAtDist(gl_FragData[0], euclideanDepth, linearDepth, far);
+#endif
 
 #if !@disableNormals
     gl_FragData[1].xyz = viewNormal * 0.5 + 0.5;

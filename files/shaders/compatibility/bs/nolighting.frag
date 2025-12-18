@@ -20,18 +20,16 @@ varying float euclideanDepth;
 varying float linearDepth;
 varying float passFalloff;
 
-uniform vec2 screenRes;
+
 uniform bool useFalloff;
-uniform float far;
-uniform float near;
 uniform float alphaRef;
 
 #include "lib/core/fragment.h.glsl"
+#include "compatibility/fog.glsl"
 #include "lib/material/alpha.glsl"
 
-#include "compatibility/vertexcolors.glsl"
-#include "compatibility/fog.glsl"
-#include "compatibility/shadows_fragment.glsl"
+#include "vertexcolors.glsl"
+#include "shadows_fragment.glsl"
 
 #if @softParticles
 #include "lib/particle/soft.glsl"

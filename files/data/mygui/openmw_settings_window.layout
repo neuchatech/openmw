@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Window" skin="MW_Window" position="0 0 400 485" layer="Settings" name="_Main">
-        <Property key="MinSize" value="640 540"/>
-        <Widget type="TabControl" skin="TabControl" position="8 8 368 405" align="Stretch" name="SettingsTab">
+    <Widget type="Window" skin="MW_Window" position="0 0 640 750" layer="Settings" name="_Main">
+        <Property key="MinSize" value="640 600"/>
+        <Widget type="TabControl" skin="TabControl" position="8 8 624 680" align="Stretch" name="SettingsTab">
             <Property key="ButtonAutoWidth" value="true"/>
             <Widget type="TabItem">
                 <Property key="Caption" value=" #{OMWEngine:Preferences} "/>
@@ -271,7 +271,7 @@
             </Widget>
             <Widget type="TabItem">
                 <Property key="Caption" value=" #{OMWEngine:Video} "/>
-                <Widget type="TabControl" skin="TabControlInner" position="4 4 352 390" align="Stretch">
+                <Widget type="TabControl" skin="TabControlInner" position="4 4 600 600" align="Stretch">
                     <Property key="ButtonAutoWidth" value="true"/>
                     <Widget type="TabItem">
                         <Property key="Caption" value=" #{OMWEngine:Video} "/>
@@ -374,7 +374,7 @@
                     <Widget type="TabItem">
                         <Property key="Caption" value=" #{OMWEngine:DetailLevel} "/>
 
-                        <Widget type="AutoSizedTextBox" skin="NormalText" align="Left Top">
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 0 200 18" align="Left Top">
                             <Property key="Caption" value="#{OMWEngine:TextureFiltering}"/>
                             <UserString key="VStretch" value="false"/>
                             <UserString key="HStretch" value="false"/>
@@ -397,30 +397,30 @@
                             <UserString key="SettingLabelCaption" value="AnisotropyValue"/>
                         </Widget>
 
-                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 104 0 18" align="Left Top" name="RenderDistanceLabel">
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 104 200 18" align="Left Top" name="RenderDistanceLabel">
                             <Property key="Caption" value="#{OMWEngine:ViewDistance}"/>
                         </Widget>
                         <Widget type="ScrollBar" skin="MW_HScroll" position="0 126 352 18" align="HStretch Top" name="RenderingDistanceSlider">
-                            <Property key="Range" value="4669"/>
+                            <Property key="Range" value="297501"/>
                             <Property key="Page" value="128"/>
                             <UserString key="SettingType" value="Slider"/>
                             <UserString key="SettingCategory" value="Camera"/>
                             <UserString key="SettingName" value="viewing distance"/>
                             <UserString key="SettingValueType" value="Float"/>
                             <UserString key="SettingMin" value="2500"/>
-                            <UserString key="SettingMax" value="7168"/>
+                            <UserString key="SettingMax" value="300000"/>
                             <UserString key="SettingLabelWidget" value="RenderDistanceLabel"/>
                             <UserString key="SettingLabelCaption" value="ViewDistanceValue"/>
                         </Widget>
                         <Widget type="ScrollBar" skin="MW_HScroll" position="0 126 352 18" align="HStretch Top" name="LargeRenderingDistanceSlider">
-                            <Property key="Range" value="79421"/>
+                            <Property key="Range" value="297501"/>
                             <Property key="Page" value="2048"/>
                             <UserString key="SettingType" value="Slider"/>
                             <UserString key="SettingCategory" value="Camera"/>
                             <UserString key="SettingName" value="viewing distance"/>
                             <UserString key="SettingValueType" value="Cell"/>
                             <UserString key="SettingMin" value="2500"/>
-                            <UserString key="SettingMax" value="81920"/>
+                            <UserString key="SettingMax" value="300000"/>
                             <UserString key="SettingLabelWidget" value="RenderDistanceLabel"/>
                             <UserString key="SettingLabelCaption" value="ViewDistanceValueCells"/>
                         </Widget>
@@ -433,6 +433,112 @@
                             <Property key="TextAlign" value="Right"/>
                         </Widget>
 
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 170 200 18" align="Left Top" name="FogStartLabel">
+                            <Property key="Caption" value="#{OMWEngine:FogStart}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 192 352 18" align="HStretch Top" name="FogStartSlider">
+                            <Property key="Range" value="100002"/>
+                            <Property key="Page" value="1024"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="fog start"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="-1"/>
+                            <UserString key="SettingMax" value="100000"/>
+                            <UserString key="SettingLabelWidget" value="FogStartLabel"/>
+                            <UserString key="SettingLabelCaption" value="FogStartValue"/>
+                        </Widget>
+
+                         <Widget type="AutoSizedTextBox" skin="NormalText" position="0 214 200 18" align="Left Top" name="FogEndLabel">
+                            <Property key="Caption" value="#{OMWEngine:FogEnd}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 236 352 18" align="HStretch Top" name="FogEndSlider">
+                            <Property key="Range" value="100002"/>
+                            <Property key="Page" value="1024"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="fog end"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="-1"/>
+                            <UserString key="SettingMax" value="100000"/>
+                            <UserString key="SettingLabelWidget" value="FogEndLabel"/>
+                            <UserString key="SettingLabelCaption" value="FogEndValue"/>
+                        </Widget>
+
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 258 200 18" align="Left Top" name="ExponentialFogDensityLabel">
+                            <Property key="Caption" value="#{OMWEngine:ExponentialFogDensity}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 280 352 18" align="HStretch Top" name="ExponentialFogDensitySlider">
+                            <Property key="Range" value="10001"/>
+                            <Property key="Page" value="100"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="exponential fog density"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="0"/>
+                            <UserString key="SettingMax" value="10"/>
+                            <UserString key="SettingLabelWidget" value="ExponentialFogDensityLabel"/>
+                            <UserString key="SettingLabelCaption" value="ExponentialFogDensityValue"/>
+                        </Widget>
+
+                        <Widget type="HBox" position="0 302 352 28">
+                            <Widget type="AutoSizedButton" skin="MW_Button" position="0 0 24 24" align="Left Top">
+                                <UserString key="SettingCategory" value="Fog"/>
+                                <UserString key="SettingName" value="height fog"/>
+                                <UserString key="SettingType" value="CheckButton"/>
+                            </Widget>
+                            <Widget type="AutoSizedTextBox" skin="SandText" position="28 4 95 16" align="Left Top">
+                                <Property key="Caption" value="#{OMWEngine:HeightFog}"/>
+                            </Widget>
+                        </Widget>
+
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 334 200 18" align="Left Top" name="HeightFogDensityLabel">
+                            <Property key="Caption" value="#{OMWEngine:HeightFogDensity}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 356 352 18" align="HStretch Top" name="HeightFogDensitySlider">
+                            <Property key="Range" value="10001"/>
+                            <Property key="Page" value="100"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="height fog density"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="0"/>
+                            <UserString key="SettingMax" value="10"/>
+                            <UserString key="SettingLabelWidget" value="HeightFogDensityLabel"/>
+                            <UserString key="SettingLabelCaption" value="HeightFogDensityValue"/>
+                        </Widget>
+
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 378 200 18" align="Left Top" name="HeightFogFalloffLabel">
+                            <Property key="Caption" value="#{OMWEngine:HeightFogFalloff}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 400 352 18" align="HStretch Top" name="HeightFogFalloffSlider">
+                            <Property key="Range" value="10001"/>
+                            <Property key="Page" value="100"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="height fog falloff"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="0"/>
+                            <UserString key="SettingMax" value="10"/>
+                            <UserString key="SettingLabelWidget" value="HeightFogFalloffLabel"/>
+                            <UserString key="SettingLabelCaption" value="HeightFogFalloffValue"/>
+                        </Widget>
+
+                        <Widget type="AutoSizedTextBox" skin="NormalText" position="0 422 200 18" align="Left Top" name="HeightFogOffsetLabel">
+                            <Property key="Caption" value="#{OMWEngine:HeightFogOffset}"/>
+                        </Widget>
+                        <Widget type="ScrollBar" skin="MW_HScroll" position="0 444 352 18" align="HStretch Top" name="HeightFogOffsetSlider">
+                            <Property key="Range" value="4001"/>
+                            <Property key="Page" value="200"/>
+                            <UserString key="SettingType" value="Slider"/>
+                            <UserString key="SettingCategory" value="Fog"/>
+                            <UserString key="SettingName" value="height fog offset"/>
+                            <UserString key="SettingValueType" value="Float"/>
+                            <UserString key="SettingMin" value="-2000"/>
+                            <UserString key="SettingMax" value="2000"/>
+                            <UserString key="SettingLabelWidget" value="HeightFogOffsetLabel"/>
+                            <UserString key="SettingLabelCaption" value="HeightFogOffsetValue"/>
+                        </Widget>
                     </Widget>
                     <Widget type="TabItem">
                         <Property key="Caption" value=" #{OMWEngine:Water} "/>
@@ -747,7 +853,7 @@
                         </Widget>
                     </Widget>
 
-                    <Widget name="ScriptBox" type="Widget" align="Stretch" name="ScriptBox">
+                    <Widget name="ScriptBox" type="Widget" align="Stretch">
                         <UserString key="HStretch" value="true"/>
                         <UserString key="VStretch" value="true"/>
 

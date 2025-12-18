@@ -32,8 +32,7 @@ varying float linearDepth;
 varying vec3 passViewPos;
 varying vec3 passNormal;
 
-uniform vec2 screenRes;
-uniform float far;
+
 uniform float alphaRef;
 uniform float emissiveMult;
 uniform float specStrength;
@@ -41,14 +40,14 @@ uniform bool useTreeAnim;
 uniform float distortionStrength;
 
 #include "lib/core/fragment.h.glsl"
+#include "compatibility/fog.glsl"
 #include "lib/light/lighting.glsl"
 #include "lib/material/alpha.glsl"
 #include "lib/util/distortion.glsl"
 
-#include "compatibility/vertexcolors.glsl"
-#include "compatibility/shadows_fragment.glsl"
-#include "compatibility/fog.glsl"
-#include "compatibility/normals.glsl"
+#include "vertexcolors.glsl"
+#include "shadows_fragment.glsl"
+#include "normals.glsl"
 
 void main()
 {
@@ -102,7 +101,7 @@ void main()
 
     gl_FragData[0].xyz = gl_FragData[0].xyz * lighting + specular;
 
-    gl_FragData[0] = applyFogAtDist(gl_FragData[0], euclideanDepth, linearDepth, far);
+    gl_FragData[0] = applyFogAtPos(gl_FragData[0], passViewPos, far);
 
 #if defined(FORCE_OPAQUE) && FORCE_OPAQUE
     // having testing & blending isn't enough - we need to write an opaque pixel to be opaque

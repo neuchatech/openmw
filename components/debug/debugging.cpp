@@ -108,6 +108,10 @@ namespace Debug
 
     namespace
     {
+        static std::unique_ptr<std::ostream> rawStdout = nullptr;
+        static std::unique_ptr<std::ostream> rawStderr = nullptr;
+        static std::unique_ptr<std::mutex> rawStderrMutex = nullptr;
+
         class DebugOutputBase : public boost::iostreams::sink
         {
         public:
@@ -183,12 +187,20 @@ namespace Debug
         class DebugOutput : public DebugOutputBase
         {
         public:
-            std::streamsize writeImpl(const char* str, std::streamsize size, Level debugLevel)
+            std::streamsize writeImpl(const char* str, std::streamsize size, Level debugLevel) override
             {
                 // Make a copy for null termination
                 std::string tmp(str, static_cast<unsigned int>(size));
                 // Write string to Visual Studio Debug output
-                OutputDebugString(tmp.c_str());
+                OutputDebugStringA(tmp.c_str());
+
+                // Also write to the actual console if we attached one
+                if (rawStdout)
+                {
+                    rawStdout->write(str, size);
+                    rawStdout->flush();
+                }
+
                 return size;
             }
 
@@ -344,9 +356,6 @@ namespace Debug
             return Verbose;
         }
 
-        static std::unique_ptr<std::ostream> rawStdout = nullptr;
-        static std::unique_ptr<std::ostream> rawStderr = nullptr;
-        static std::unique_ptr<std::mutex> rawStderrMutex = nullptr;
         static std::ofstream logfile;
 
 #if defined(_WIN32) && defined(_DEBUG)

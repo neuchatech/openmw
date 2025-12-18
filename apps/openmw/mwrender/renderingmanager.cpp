@@ -161,7 +161,9 @@ namespace MWRender
             : mNear(0.f)
             , mFar(0.f)
             , mWindSpeed(0.f)
-            , mSkyBlendingStartCoef(Settings::fog().mSkyBlendingStart)
+            , mFogStart(0.f)
+            , mFogEnd(0.f)
+            , mFogColor(osg::Vec4f(0.8f, 0.9f, 1.0f, 1.0f))
         {
         }
 
@@ -174,17 +176,41 @@ namespace MWRender
             stateset->addUniform(new osg::Uniform("isReflection", false));
             stateset->addUniform(new osg::Uniform("windSpeed", 0.0f));
             stateset->addUniform(new osg::Uniform("playerPos", osg::Vec3f(0.f, 0.f, 0.f)));
+            stateset->addUniform(new osg::Uniform("cameraPos", osg::Vec3f(0.f, 0.f, 0.f)));
+            stateset->addUniform(new osg::Uniform("invViewMatrix", osg::Matrixf{}));
             stateset->addUniform(new osg::Uniform("useTreeAnim", false));
+
+            stateset->addUniform(new osg::Uniform("exponentialFogDensity", 0.f));
+            stateset->addUniform(new osg::Uniform("heightFogEnabled", false));
+            stateset->addUniform(new osg::Uniform("heightFogDensity", 0.f));
+            stateset->addUniform(new osg::Uniform("heightFogFalloff", 0.f));
+            stateset->addUniform(new osg::Uniform("heightFogOffset", 0.f));
+
+            stateset->addUniform(new osg::Uniform("fogStart", 0.f));
+            stateset->addUniform(new osg::Uniform("fogEnd", 0.f));
+            stateset->addUniform(new osg::Uniform("fogColor", osg::Vec4f(0.f, 0.f, 0.f, 0.f)));
         }
 
         void apply(osg::StateSet* stateset, osg::NodeVisitor* nv) override
         {
-            stateset->getUniform("near")->set(mNear);
-            stateset->getUniform("far")->set(mFar);
-            stateset->getUniform("skyBlendingStart")->set(mFar * mSkyBlendingStartCoef);
-            stateset->getUniform("screenRes")->set(mScreenRes);
-            stateset->getUniform("windSpeed")->set(mWindSpeed);
-            stateset->getUniform("playerPos")->set(mPlayerPos);
+            if (osg::Uniform* nearU = stateset->getUniform("near")) nearU->set(mNear);
+            if (osg::Uniform* farU = stateset->getUniform("far")) farU->set(mFar);
+            if (osg::Uniform* sBStartU = stateset->getUniform("skyBlendingStart")) sBStartU->set(mFar * Settings::fog().mSkyBlendingStart);
+            if (osg::Uniform* sResU = stateset->getUniform("screenRes")) sResU->set(mScreenRes);
+            if (osg::Uniform* wSpeedU = stateset->getUniform("windSpeed")) wSpeedU->set(mWindSpeed);
+            if (osg::Uniform* pPosU = stateset->getUniform("playerPos")) pPosU->set(mPlayerPos);
+            if (osg::Uniform* cPosU = stateset->getUniform("cameraPos")) cPosU->set(mCameraPos);
+            if (osg::Uniform* iVMatU = stateset->getUniform("invViewMatrix")) iVMatU->set(mInvViewMatrix);
+
+            if (osg::Uniform* expFogU = stateset->getUniform("exponentialFogDensity")) expFogU->set(Settings::fog().mExponentialFogDensity);
+            if (osg::Uniform* hFogEU = stateset->getUniform("heightFogEnabled")) hFogEU->set(Settings::fog().mHeightFogEnabled);
+            if (osg::Uniform* hFogDU = stateset->getUniform("heightFogDensity")) hFogDU->set(Settings::fog().mHeightFogDensity);
+            if (osg::Uniform* hFogFU = stateset->getUniform("heightFogFalloff")) hFogFU->set(Settings::fog().mHeightFogFalloff);
+            if (osg::Uniform* hFogOU = stateset->getUniform("heightFogOffset")) hFogOU->set(Settings::fog().mHeightFogOffset);
+
+            if (osg::Uniform* fSU = stateset->getUniform("fogStart")) fSU->set(mFogStart);
+            if (osg::Uniform* fEU = stateset->getUniform("fogEnd")) fEU->set(mFogEnd);
+            if (osg::Uniform* fCU = stateset->getUniform("fogColor")) fCU->set(mFogColor);
         }
 
         void setNear(float near) { mNear = near; }
@@ -197,13 +223,26 @@ namespace MWRender
 
         void setPlayerPos(osg::Vec3f playerPos) { mPlayerPos = playerPos; }
 
+        void setCameraPos(osg::Vec3f cameraPos) { mCameraPos = cameraPos; }
+
+        void setInvViewMatrix(const osg::Matrixf& matrix) { mInvViewMatrix = matrix; }
+
+        void setFogStart(float start) { mFogStart = start; }
+        void setFogEnd(float end) { mFogEnd = end; }
+        void setFogColor(const osg::Vec4f& color) { mFogColor = color; }
+
     private:
         float mNear;
         float mFar;
         float mWindSpeed;
-        float mSkyBlendingStartCoef;
         osg::Vec3f mPlayerPos;
+        osg::Vec3f mCameraPos;
+        osg::Matrixf mInvViewMatrix;
         osg::Vec2f mScreenRes;
+
+        float mFogStart;
+        float mFogEnd;
+        osg::Vec4f mFogColor;
     };
 
     class StateUpdater : public SceneUtil::StateSetUpdater
@@ -325,6 +364,7 @@ namespace MWRender
         , mFirstPersonFieldOfView(Settings::camera().mFirstPersonFieldOfView)
         , mGroundCoverStore(groundcoverStore)
     {
+        Log(Debug::Info) << "Initializing RenderingManager...";
         bool reverseZ = SceneUtil::AutoDepth::isReversed();
         const SceneUtil::LightingMethod lightingMethod = Settings::shaders().mLightingMethod;
 
@@ -340,6 +380,8 @@ namespace MWRender
                     requesters.push_back("radial fog");
                 if (Settings::fog().mExponentialFog)
                     requesters.push_back("exponential fog");
+                if (Settings::fog().mHeightFogEnabled)
+                    requesters.push_back("height fog");
                 if (mSkyBlending)
                     requesters.push_back("sky blending");
                 if (Settings::shaders().mSoftParticles)
@@ -913,6 +955,8 @@ namespace MWRender
             float windSpeed = mSky->getBaseWindSpeed();
             mSharedUniformStateUpdater->setWindSpeed(windSpeed);
             mSharedUniformStateUpdater->setPlayerPos(playerPos);
+            mSharedUniformStateUpdater->setCameraPos(mCamera->getPosition());
+            mSharedUniformStateUpdater->setInvViewMatrix(osg::Matrixf::inverse(mCamera->getViewMatrix()));
         }
 
         updateNavMesh();
@@ -933,22 +977,26 @@ namespace MWRender
 
         mStateUpdater->setFogStart(fogStart);
         mStateUpdater->setFogEnd(fogEnd);
+        mSharedUniformStateUpdater->setFogStart(fogStart);
+        mSharedUniformStateUpdater->setFogEnd(fogEnd);
         setFogColor(fogColor);
 
-        auto world = MWBase::Environment::get().getWorld();
-        const auto& stateUpdater = mPostProcessor->getStateUpdater();
+        if (auto world = MWBase::Environment::get().getWorld())
+        {
+            const auto& stateUpdater = mPostProcessor->getStateUpdater();
 
-        stateUpdater->setFogRange(fogStart, fogEnd);
-        stateUpdater->setNearFar(mNearClip, mViewDistance);
-        stateUpdater->setIsUnderwater(isUnderwater);
-        stateUpdater->setFogColor(fogColor);
-        stateUpdater->setGameHour(world->getTimeStamp().getHour());
-        stateUpdater->setWeatherId(world->getCurrentWeatherScriptId());
-        stateUpdater->setNextWeatherId(world->getNextWeatherScriptId());
-        stateUpdater->setWeatherTransition(world->getWeatherTransition());
-        stateUpdater->setWindSpeed(world->getWindSpeed());
-        stateUpdater->setSkyColor(mSky->getSkyColor());
-        mPostProcessor->setUnderwaterFlag(isUnderwater);
+            stateUpdater->setFogRange(fogStart, fogEnd);
+            stateUpdater->setNearFar(mNearClip, mViewDistance);
+            stateUpdater->setIsUnderwater(isUnderwater);
+            stateUpdater->setFogColor(fogColor);
+            stateUpdater->setGameHour(world->getTimeStamp().getHour());
+            stateUpdater->setWeatherId(world->getCurrentWeatherScriptId());
+            stateUpdater->setNextWeatherId(world->getNextWeatherScriptId());
+            stateUpdater->setWeatherTransition(world->getWeatherTransition());
+            stateUpdater->setWindSpeed(world->getWindSpeed());
+            stateUpdater->setSkyColor(mSky->getSkyColor());
+            mPostProcessor->setUnderwaterFlag(isUnderwater);
+        }
     }
 
     void RenderingManager::updatePlayerPtr(const MWWorld::Ptr& ptr)
@@ -1445,6 +1493,7 @@ namespace MWRender
         mViewer->getCamera()->setClearColor(color);
 
         mStateUpdater->setFogColor(color);
+        mSharedUniformStateUpdater->setFogColor(color);
     }
 
     RenderingManager::WorldspaceChunkMgr& RenderingManager::getWorldspaceChunkMgr(ESM::RefId worldspace)
@@ -1594,6 +1643,11 @@ namespace MWRender
                     if (auto* hud = MWBase::Environment::get().getWindowManager()->getPostProcessorHud())
                         hud->setVisible(false);
                 }
+            }
+            else if (it->first == "Fog")
+            {
+                if (MWMechanics::getPlayer().isInCell())
+                    mFog->configure(mViewDistance, *MWMechanics::getPlayer().getCell()->getCell());
             }
         }
 

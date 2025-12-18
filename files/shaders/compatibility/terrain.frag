@@ -34,14 +34,14 @@ centroid varying vec3 shadowSpecularLighting;
 varying vec3 passViewPos;
 varying vec3 passNormal;
 
-uniform vec2 screenRes;
-uniform float far;
 
+
+#include "lib/core/fragment.h.glsl"
+#include "fog.glsl"
 #include "vertexcolors.glsl"
 #include "shadows_fragment.glsl"
 #include "lib/light/lighting.glsl"
 #include "lib/material/parallax.glsl"
-#include "fog.glsl"
 #include "compatibility/normals.glsl"
 
 void main()
@@ -96,7 +96,7 @@ void main()
     clampLightingResult(lighting);
     gl_FragData[0].xyz = gl_FragData[0].xyz * lighting + specular;
 
-    gl_FragData[0] = applyFogAtDist(gl_FragData[0], euclideanDepth, linearDepth, far);
+    gl_FragData[0] = applyFogAtPos(gl_FragData[0], passViewPos, far);
 
 #if !@disableNormals && @writeNormals
     gl_FragData[1].xyz = viewNormal * 0.5 + 0.5;

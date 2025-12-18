@@ -720,6 +720,7 @@ void OMW::Engine::setWindowIcon()
 
 void OMW::Engine::prepareEngine()
 {
+    Log(Debug::Info) << "Initializing Engine...";
     mStateManager = std::make_unique<MWState::StateManager>(mCfgMgr.getUserDataPath() / "saves", mContentFiles);
     mEnvironment.setStateManager(*mStateManager);
 
@@ -848,8 +849,11 @@ void OMW::Engine::prepareEngine()
     {
         std::string_view logo = Fallback::Map::getString("Movies_Company_Logo");
         if (!logo.empty())
+        {
             mWindowManager->playVideo(logo, true);
+        }
     }
+
 
     listener->loadingOn();
     {

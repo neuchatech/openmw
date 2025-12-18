@@ -226,7 +226,10 @@ int runApplication(int argc, char* argv[])
     if (parseOptions(argc, argv, *engine, cfgMgr))
     {
         if (!Misc::checkRequiredOSGPluginsArePresent())
+        {
+            Log(Debug::Error) << "Required OSG plugins are missing!";
             return 1;
+        }
 
         engine->go();
     }

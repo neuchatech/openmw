@@ -62,9 +62,7 @@ uniform sampler2D glossMap;
 varying vec2 glossMapUV;
 #endif
 
-uniform vec2 screenRes;
-uniform float near;
-uniform float far;
+
 uniform float alphaRef;
 uniform float distortionStrength;
 
@@ -90,12 +88,12 @@ varying vec4 passTangent;
 #endif
 
 #include "lib/core/fragment.h.glsl"
+#include "fog.glsl"
 #include "lib/light/lighting.glsl"
 #include "lib/material/parallax.glsl"
 #include "lib/material/alpha.glsl"
 #include "lib/util/distortion.glsl"
 
-#include "fog.glsl"
 #include "vertexcolors.glsl"
 #include "shadows_fragment.glsl"
 #include "compatibility/normals.glsl"

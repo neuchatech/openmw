@@ -42,6 +42,11 @@ namespace MWRender
         }
         else
             configure(viewDistance, fogDensity, mUnderwaterIndoorFog, 1.0f, 0.0f, color);
+
+        if (Settings::fog().mFogStart >= 0.0f)
+            mLandFogStart = Settings::fog().mFogStart;
+        if (Settings::fog().mFogEnd >= 0.0f)
+            mLandFogEnd = Settings::fog().mFogEnd;
     }
 
     void FogManager::configure(float viewDistance, float fogDepth, float underwaterFog, float dlFactor, float dlOffset,
@@ -71,6 +76,11 @@ namespace MWRender
             mUnderwaterFogEnd = std::min(viewDistance, 7168.f);
         }
         mFogColor = color;
+
+        if (Settings::fog().mFogStart >= 0.0f)
+            mLandFogStart = Settings::fog().mFogStart;
+        if (Settings::fog().mFogEnd >= 0.0f)
+            mLandFogEnd = Settings::fog().mFogEnd;
     }
 
     float FogManager::getFogStart(bool isUnderwater) const

@@ -71,24 +71,23 @@ varying vec2 rippleMapUV;
 
 varying vec4 position;
 varying float linearDepth;
+varying vec3 viewSpacePos;
 
 uniform sampler2D normalMap;
 
 uniform float osg_SimulationTime;
 
-uniform float near;
-uniform float far;
-
 uniform float rainIntensity;
 uniform bool enableRainRipples;
 
-uniform vec2 screenRes;
+
 
 #define PER_PIXEL_LIGHTING 0
 
+#include "lib/core/fragment.h.glsl"
+#include "fog.glsl"
 #include "shadows_fragment.glsl"
 #include "lib/light/lighting.glsl"
-#include "fog.glsl"
 #include "lib/water/fresnel.glsl"
 #include "lib/water/rain_ripples.glsl"
 #include "lib/view/depth.glsl"
@@ -243,7 +242,7 @@ void main(void)
     float radialDepth = 0.0;
 #endif
 
-    gl_FragData[0] = applyFogAtDist(gl_FragData[0], radialDepth, linearDepth, far);
+    gl_FragData[0] = applyFogAtPos(gl_FragData[0], viewSpacePos, far);
 
 #if !@disableNormals
     gl_FragData[1].rgb = normalize(gl_NormalMatrix * normal) * 0.5 + 0.5;
