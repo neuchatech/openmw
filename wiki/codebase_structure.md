@@ -84,13 +84,14 @@ Shared functionality used by all applications.
 -   **`detournavigator/`**: Integration of Recast/Detour for navigation (Pathfinding).
 -   **`nif/` & `nifosg/`**: Low-level parsing of NIF files and conversion to standard OSG structures.
 
-## Core Concepts for Contributors
+## Recent Architectural Shifts (2025)
 
-1.  **The Environment Singleton**: `MWBase::Environment::get()` is the global access point to `World`, `MechanicsManager`, etc.
-2.  **The Ptr**: `MWWorld::Ptr` is how you reference objects. Never store raw pointers to game objects; use Ptrs.
-3.  **Class Hierarchy**: Most game objects share a common interface via `MWWorld::Class`, but have specific implementations (e.g., `MWClass::Npc`, `MWClass::Door`).
-4.  **Physics vs. Mechanics**: `mwphysics` handles collision and spatial queries. `mwmechanics` handles *decisions* and *attributes* (stats). The `Actors` class bridges them.
+1.  **Render Loop Synchronization**: `RenderingManager::update` has been refactored to ensure the main camera update happens before any uniform or state updates. This prevents a 1-frame "lag" in uniforms derived from the camera (like fog and inverse view matrices).
+2.  **Stamina-First Defense**: The `CreatureStats::takeDamage` function now implements a "Stamina Shield" where melee/ranged damage is diverted to Fatigue as long as it is above zero.
+3.  **Modern Shadow Pipeline**: The engine now defaults to higher-resolution cascaded shadow maps, managed via `MWShadowTechnique`.
 
-## Building and Testing
--   **Build System**: CMake is used for build configuration.
--   **Tests**: Unit tests are located in `apps/openmw_tests`, `apps/opencs_tests`, and `components/components_tests`.
+## Essential Utilities for Contributors
+
+-   **`MWBase::Environment::get()`**: The central singleton to access nearly all managers (World, Mechanics, Sound, GUI, Scripting).
+-   **`MWWorld::Ptr`**: The universal handle for game objects. It safely wraps a reference to many different record types (NPCs, Items, Statics).
+-   **`Misc::Rng`**: Centralized random number generation to ensure consistency and seed-ability.

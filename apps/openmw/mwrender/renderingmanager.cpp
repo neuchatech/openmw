@@ -938,6 +938,7 @@ namespace MWRender
         reportStats();
 
         mResourceSystem->getSceneManager()->getShaderManager().update(*mViewer);
+        mCamera->update(dt, paused);
 
         float rainIntensity = mSky->getPrecipitationAlpha();
         mWater->setRainIntensity(rainIntensity);
@@ -967,7 +968,6 @@ namespace MWRender
             mUpdateProjectionMatrix = false;
             updateProjectionMatrix();
         }
-        mCamera->update(dt, paused);
 
         bool isUnderwater = mWater->isUnderwater(mCamera->getPosition());
 

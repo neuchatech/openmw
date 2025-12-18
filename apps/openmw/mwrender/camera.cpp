@@ -144,6 +144,18 @@ namespace MWRender
         if (!paused)
             updateFocalPointOffset(duration);
         updatePosition();
+
+        osg::Quat orient = getOrient();
+        osg::Vec3d forward = orient * osg::Vec3d(0, 1, 0);
+        osg::Vec3d up = orient * osg::Vec3d(0, 0, 1);
+
+        osg::Vec3d pos = mPosition;
+        if (mMode == Mode::FirstPerson)
+        {
+            osg::Vec3d recalculatedTrackedPosition = calculateTrackedPosition();
+            pos = calculateFirstPersonPosition(recalculatedTrackedPosition);
+        }
+        mViewMatrix = osg::Matrixf(osg::Matrixd::lookAt(pos, pos + forward, up));
     }
 
     osg::Vec3d Camera::calculateFirstPersonPosition(const osg::Vec3d& trackedPosition) const
