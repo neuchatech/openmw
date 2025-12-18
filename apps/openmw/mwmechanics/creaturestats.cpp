@@ -168,17 +168,17 @@ namespace MWMechanics
 
             if (currentFatigue > 0.f)
             {
-                // Sprint 4: Smart Fatigue - 3x Damage to Fatigue Only
-                // Damage is multiplied by 3 for fatigue absorption calculation.
+                // Sprint 4: Smart Fatigue - 5x Damage to Fatigue Only
+                // Damage is multiplied by 5 for fatigue absorption calculation.
                 // If fatigue absorbs it, we subtract the *unmultiplied* amount from the health damage.
-                float fatigueDamage = damage * 3.0f;
+                float fatigueDamage = damage * 5.0f;
                 float absorbed = std::min(currentFatigue, fatigueDamage);
                 
                 fatigue.setCurrent(currentFatigue - absorbed);
                 setFatigue(fatigue);
 
                 // Reduce actual health damage by the amount absorbed (converted back to health units)
-                damage -= (absorbed / 3.0f);
+                damage -= (absorbed / 5.0f);
             }
         }
 

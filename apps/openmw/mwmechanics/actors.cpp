@@ -943,6 +943,8 @@ namespace MWMechanics
         
         // Clamp ratio to 0-1
         healthRatio = std::max(0.0f, std::min(1.0f, healthRatio));
+        // Sprint 6: Relax health gating - always allow at least 25% fatigue
+        healthRatio = std::max(0.25f, healthRatio);
 
         float maxFatigueCap = fatigue.getBase() * healthRatio;
         if (fatigue.getCurrent() >= maxFatigueCap)
@@ -956,8 +958,11 @@ namespace MWMechanics
 
         const float x = fFatigueReturnBase + fFatigueReturnMult * endurance;
 
-        // Apply 5x multiplier to regen rate
-        float restoreAmount = duration * x * 5.0f;
+        // Apply multiplier to regen rate (Sprint 6 update)
+        // Player: 5x (Standard)
+        // Enemies: 2.5x (Halved)
+        float multiplier = (ptr == getPlayer()) ? 5.0f : 2.5f;
+        float restoreAmount = duration * x * multiplier;
         float current = fatigue.getCurrent();
         
         // Apply restoration but clamp to maxFatigueCap
