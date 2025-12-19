@@ -10,10 +10,11 @@ This sprint focuses on removing "dice roll" misses from combat. Instead of missi
 - **Location**: `apps/openmw/mwmechanics/combat.cpp`
 - **Action**: In `projectileHit` and melee hit calculations, replace the RNG check `Misc::Rng::roll0to99(...) >= getHitChance(...)` with a guaranteed success (or a very high threshold like 95-100%).
 
-## 2. Implement Scaling Damage
-- **Logic**: Use the `hitChance` (0-100) to determine a damage multiplier.
-- **Formula**: `finalDamage = baseDamage * (random(1, hitChance) / 100.f)`
-- **Goal**: A high-skill character deals consistent high damage. A low-skill character deals sporadic, mostly low damage, representing "grazing hits" instead of misses.
+## 2. Implement Damage Scaling Formula:
+    *   Instead of full damage or zero damage, use the hit chance to set a floor.
+    *   `finalDamage = baseDamage * (random(hitChance, 100) / 100.f)`
+    *   This ensures that at 100% hit chance, you always deal 100% damage. At 50% hit chance, you deal between 50% and 100%.
+    *   A low-skill character deals sporadic, mostly low damage, representing "grazing hits" instead of misses.
 
 ## 3. Verify Combat Flow
 - Ensure that fast-attacking weapons (Daggers) don't become overpowered due to 100% uptime.

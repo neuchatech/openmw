@@ -901,7 +901,12 @@ namespace MWMechanics
         const float x
             = (fFatigueReturnBase + fFatigueReturnMult * (1 - normalizedEncumbrance)) * (fEndFatigueMult * endurance);
 
-        fatigue.setCurrent(static_cast<float>(fatigue.getCurrent() + 3600 * x * hours));
+        float multiplier = Settings::game().mCreatureFatigueRegenMult;
+        if (ptr == getPlayer())
+            multiplier = Settings::game().mPlayerFatigueRegenMult;
+        else if (ptr.getClass().isNpc())
+            multiplier = Settings::game().mNpcFatigueRegenMult;
+        fatigue.setCurrent(static_cast<float>(fatigue.getCurrent() + 3600 * x * hours * multiplier));
         stats.setFatigue(fatigue);
     }
 
@@ -957,11 +962,21 @@ namespace MWMechanics
         static const float fFatigueReturnMult = settings.find("fFatigueReturnMult")->mValue.getFloat();
 
         const float x = fFatigueReturnBase + fFatigueReturnMult * endurance;
-
-        // Apply multiplier to regen rate (Sprint 6 update)
-        // Player: 5x (Standard)
-        // Enemies: 2.5x (Halved)
-        float multiplier = (ptr == getPlayer()) ? 5.0f : 2.5f;
+ 
+        // Apply multiplier to regen rate (Sprint 9 update)
+        float multiplier = Settings::game().mCreatureFatigueRegenMult;
+        if (ptr == getPlayer())
+            multiplier = Settings::game().mPlayerFatigueRegenMult;
+        else if (ptr.getClass().isNpc())
+            multiplier = Settings::game().mNpcFatigueRegenMult;
+        // Adjust for internal scaling
+        multiplier *= 10.0f; // Original code used 5.0f and 2.5f relative to some baseline, let's keep it consistent
+                             // actually, user wants "restore speed for creatures" (was 0.5 before, now 1.0)
+                             // and "2x slower" for player (was 0.5? wait)
+                             // User said: "instead of the current 1s... restoration speed should be put back where it was on the creatures."
+                             // Previously I had 0.5 for everyone.
+                             // Now I set player = 0.5, creature = 1.0 (default in cfg).
+        
         float restoreAmount = duration * x * multiplier;
         float current = fatigue.getCurrent();
         

@@ -162,6 +162,9 @@ namespace MWMechanics
 
         void setFatigue(const DynamicStat<float>& value);
 
+        void reduceFatigue(float amount, bool triggerDelay);
+
+
         void setDynamic(int index, const DynamicStat<float>& value);
 
         void setAttackingOrSpell(bool attackingOrSpell) { mAttackingOrSpell = attackingOrSpell; }

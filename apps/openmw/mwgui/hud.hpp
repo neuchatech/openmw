@@ -58,6 +58,7 @@ namespace MWGui
         MyGUI::Widget* getEffectBox() { return mEffectBox; }
 
         void setEnemy(const MWWorld::Ptr& enemy);
+        void showDamage(float damage);
 
         void clear() override;
 
@@ -102,6 +103,9 @@ namespace MWGui
 
         int mEnemyActorId;
         float mEnemyHealthTimer;
+
+        MyGUI::TextBox* mDamageBox;
+        float mDamageTimer;
 
         bool mIsDrowning;
         float mDrowningFlashTheta;

@@ -116,7 +116,7 @@ namespace MWRender
         const MWWorld::Store<ESM::GameSetting>& gmst
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
 
-        MWMechanics::applyFatigueLoss(actor, *weapon, attackStrength);
+
 
         if (MWMechanics::getWeaponType(weapon->get<ESM::Weapon>()->mBase->mData.mType)->mWeaponClass
             == ESM::WeaponType::Thrown)

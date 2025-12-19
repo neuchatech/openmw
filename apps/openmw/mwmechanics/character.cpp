@@ -2175,9 +2175,8 @@ namespace MWMechanics
                     }
                     fatigueLoss *= duration;
                     fatigueLoss *= movementSettings.mSpeedFactor;
-                    DynamicStat<float> fatigue = cls.getCreatureStats(mPtr).getFatigue();
-                    fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss, fatigue.getCurrent() < 0);
-                    cls.getCreatureStats(mPtr).setFatigue(fatigue);
+                    cls.getCreatureStats(mPtr).reduceFatigue(fatigueLoss, false);
+
                 }
             }
 
@@ -2377,11 +2376,29 @@ namespace MWMechanics
                 refreshCurrentAnims(idlestate, movestate, jumpstate, updateWeaponState());
                 updateIdleStormState(inwater);
 
-                // Heavy Attack Rebalancing: Slow down windup to target 1.0s
+                // Heavy Attack Rebalancing: Continuous drain and slow down windup
                 if (mUpperBodyState == UpperBodyState::AttackWindUp && !mCurrentWeapon.empty() && mAnimation
                     && mWeaponType != ESM::Weapon::PickProbe && !isRandomAttackAnimation(mCurrentWeapon))
                 {
+                    static const float fFatigueAttackBase = gmst.find("fFatigueAttackBase")->mValue.getFloat();
+                    static const float fFatigueAttackMult = gmst.find("fFatigueAttackMult")->mValue.getFloat();
+                    static const float fWeaponFatigueMult = gmst.find("fWeaponFatigueMult")->mValue.getFloat();
+
+                    float weaponWeight = 0.f;
+                    if (!mWeapon.isEmpty() && mWeapon.getType() == ESM::Weapon::sRecordId)
+                        weaponWeight = mWeapon.getClass().getWeight(mWeapon);
+
+                    float normalizedEncumbrance = cls.getNormalizedEncumbrance(mPtr);
+
+                    // Continuous drain rate (5x normal cost per second)
+                    float drainRate = fFatigueAttackBase + normalizedEncumbrance * fFatigueAttackMult;
+                    drainRate += weaponWeight * fWeaponFatigueMult;
+                    drainRate *= 5.0f;
+
+                    stats.reduceFatigue(drainRate * duration, false);
+
                     float minAttackTime = mAnimation->getTextKeyTime(mCurrentWeapon + ": " + mAttackType + " min attack");
+
                     float maxAttackTime = mAnimation->getTextKeyTime(mCurrentWeapon + ": " + mAttackType + " max attack");
                     float currentTime = mAnimation->getCurrentTime(mCurrentWeapon);
 

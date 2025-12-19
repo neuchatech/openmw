@@ -64,6 +64,8 @@ namespace MWGui
         , mWorldMouseOver(false)
         , mEnemyActorId(-1)
         , mEnemyHealthTimer(-1)
+        , mDamageBox(nullptr)
+        , mDamageTimer(-1)
         , mIsDrowning(false)
         , mDrowningFlashTheta(0.f)
     {
@@ -129,6 +131,9 @@ namespace MWGui
         mMainWidget->eventMouseButtonClick += MyGUI::newDelegate(this, &HUD::onWorldClicked);
         mMainWidget->eventMouseMove += MyGUI::newDelegate(this, &HUD::onWorldMouseOver);
         mMainWidget->eventMouseLostFocus += MyGUI::newDelegate(this, &HUD::onWorldMouseLostFocus);
+
+        getWidget(mDamageBox, "DamageText");
+        mDamageBox->setVisible(false);
 
         mSpellIcons = std::make_unique<SpellIcons>();
     }
@@ -339,6 +344,10 @@ namespace MWGui
             mEnemyStamina->setVisible(false);
             mWeaponSpellBox->setPosition(mWeaponSpellBox->getPosition() + MyGUI::IntPoint(0, 20));
         }
+
+        mDamageTimer -= dt;
+        if (mDamageBox->getVisible() && mDamageTimer < 0)
+            mDamageBox->setVisible(false);
 
         mSpellIcons->updateWidgets(mEffectBox, true);
 
@@ -622,6 +631,16 @@ namespace MWGui
         mEnemyHealth->setVisible(true);
         mEnemyStamina->setVisible(true);
         updateEnemyHealthBar();
+    }
+
+    void HUD::showDamage(float damage)
+    {
+        if (!Settings::game().mShowDamagePopups)
+            return;
+
+        mDamageBox->setCaption(MyGUI::utility::toString(static_cast<int>(damage)));
+        mDamageBox->setVisible(true);
+        mDamageTimer = 2.0f; // Show for 2 seconds
     }
 
     void HUD::clear()

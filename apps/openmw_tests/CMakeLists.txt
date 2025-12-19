@@ -20,6 +20,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwscript/testscripts.cpp
 
     mwmechanics/testcreaturestats.cpp
+    mwmechanics/test_damage_scaling.cpp
 )
 
 source_group(apps\\openmw-tests FILES ${UNITTEST_SRC_FILES})

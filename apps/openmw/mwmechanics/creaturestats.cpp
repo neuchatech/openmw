@@ -7,6 +7,7 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadmgef.hpp>
+#include <components/settings/values.hpp>
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -171,15 +172,13 @@ namespace MWMechanics
                 // Sprint 4: Smart Fatigue - 5x Damage to Fatigue Only
                 // Damage is multiplied by 5 for fatigue absorption calculation.
                 // If fatigue absorbs it, we subtract the *unmultiplied* amount from the health damage.
-                float fatigueDamage = damage * 5.0f;
-                float absorbed = std::min(currentFatigue, fatigueDamage);
-                
-                fatigue.setCurrent(currentFatigue - absorbed);
-                setFatigue(fatigue);
+                float absorbed = std::min(currentFatigue, damage * 5.0f);
+                reduceFatigue(absorbed, true);
 
                 // Reduce actual health damage by the amount absorbed (converted back to health units)
                 damage -= (absorbed / 5.0f);
             }
+
         }
 
         if (damage > 0.f)
@@ -201,14 +200,24 @@ namespace MWMechanics
     }
 
     void CreatureStats::setFatigue(const DynamicStat<float>& value)
-{
-    // Sprint 3: Reset fatigue delay timer if fatigue decreases
-    if (value.getCurrent() < mDynamic[2].getCurrent())
     {
-        mFatigueDelayTimer = 1.0f;
+        mDynamic[2] = value;
     }
-    mDynamic[2] = value;
-}
+
+    void CreatureStats::reduceFatigue(float amount, bool triggerDelay)
+    {
+        if (amount <= 0.f)
+            return;
+
+        float current = mDynamic[2].getCurrent();
+        mDynamic[2].setCurrent(current - amount);
+
+        if (triggerDelay)
+        {
+            mFatigueDelayTimer = Settings::game().mFatigueRegenDelay;
+        }
+    }
+
     void CreatureStats::setDynamic(int index, const DynamicStat<float>& value)
     {
         if (index < 0 || index > 2)

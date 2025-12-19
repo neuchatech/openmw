@@ -35,6 +35,10 @@
 
 namespace
 {
+    // Sprint 7.5: Combat Tuning Constants
+    constexpr float MIN_HIT_CHANCE = 0.0f;
+    constexpr float MAX_HIT_CHANCE = 100.0f;
+    constexpr float DAMAGE_SCALING_INTENSITY = 1.0f;
 
     float signedAngleRadians(const osg::Vec3f& v1, const osg::Vec3f& v2, const osg::Vec3f& normal)
     {
@@ -234,31 +238,50 @@ namespace MWMechanics
             weaponSkill = weapon.getClass().getEquipmentSkill(weapon);
 
         float damage = 0.f;
+        float hitchance = 100.0f;
         if (validVictim)
         {
             if (attacker == getPlayer())
                 MWBase::Environment::get().getWindowManager()->setEnemy(victim);
 
             int skillValue = static_cast<int>(attacker.getClass().getSkill(attacker, weaponSkill));
-
-            if (Misc::Rng::roll0to99(world->getPrng()) >= getHitChance(attacker, victim, skillValue))
-            {
-                MWBase::Environment::get().getLuaManager()->onHit(attacker, victim, weapon, projectile, 0,
-                    attackStrength, damage, false, hitPosition, false, MWMechanics::DamageSourceType::Ranged);
-                MWMechanics::reduceWeaponCondition(damage, false, weapon, attacker);
-                return;
-            }
+            // Sprint 7: Guaranteed Hits - Ranged always hits if physical contact is made.
+            hitchance = getHitChance(attacker, victim, skillValue);
 
             {
-                const auto& attack = weapon.get<ESM::Weapon>()->mBase->mData.mChop;
-                damage = attack[0] + ((attack[1] - attack[0]) * attackStrength); // Bow/crossbow damage
+                // Bow/crossbow damage
+                if (!weapon.isEmpty() && weapon.getType() == ESM::Weapon::sRecordId)
+                {
+                    const auto& attack = weapon.get<ESM::Weapon>()->mBase->mData.mChop;
+                    damage = attack[0] + ((attack[1] - attack[0]) * attackStrength);
+                }
+
             }
             {
                 // Arrow/bolt damage
                 // NB in case of thrown weapons, we are applying the damage twice since projectile == weapon
-                const auto& attack = projectile.get<ESM::Weapon>()->mBase->mData.mChop;
-                damage += attack[0] + ((attack[1] - attack[0]) * attackStrength);
+                if (!projectile.isEmpty() && projectile.getType() == ESM::Weapon::sRecordId)
+                {
+                    const auto& attack = projectile.get<ESM::Weapon>()->mBase->mData.mChop;
+                    damage += attack[0] + ((attack[1] - attack[0]) * attackStrength);
+                }
+
             }
+
+            bool isGuaranteedHit = Settings::game().mCombatDamageScaling;
+            if (!isGuaranteedHit && Misc::Rng::roll0to99(world->getPrng()) >= hitchance)
+            {
+                damage = 0;
+            }
+
+            if (damage > 0 && isGuaranteedHit)
+            {
+                // Sprint 7.5: Apply damage scaling with intensity modifier
+                float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+                float scalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(world->getPrng());
+                damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
+            }
+
             adjustWeaponDamage(damage, weapon, attacker);
         }
 
@@ -289,7 +312,10 @@ namespace MWMechanics
         }
 
         // Apply "On hit" effect of the projectile
-        bool appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
+        // Sprint 7: Restrict enchantment trigger to the original hit chance probability to maintain balance.
+        bool appliedEnchantment = false;
+        if (Misc::Rng::roll0to99(world->getPrng()) < hitchance)
+            appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
 
         if (validVictim)
         {
@@ -301,10 +327,13 @@ namespace MWMechanics
                 if (Misc::Rng::rollProbability(world->getPrng()) < fProjectileThrownStoreChance / 100.f)
                     victim.getClass().getContainerStore(victim).add(projectile, 1);
             }
-
-            MWBase::Environment::get().getLuaManager()->onHit(attacker, victim, weapon, projectile, 0, attackStrength,
-                damage, true, hitPosition, true, MWMechanics::DamageSourceType::Ranged);
         }
+
+        MWBase::Environment::get().getLuaManager()->onHit(attacker, victim, weapon, projectile, 0,
+            attackStrength, damage, true, hitPosition, true, MWMechanics::DamageSourceType::Ranged);
+
+        if (attacker == getPlayer() && damage > 0)
+            MWBase::Environment::get().getWindowManager()->showDamage(damage);
     }
 
     float getHitChance(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, int skillValue)
@@ -340,7 +369,7 @@ namespace MWMechanics
         attackTerm += mageffects.getOrDefault(ESM::MagicEffect::FortifyAttack).getMagnitude()
             - mageffects.getOrDefault(ESM::MagicEffect::Blind).getMagnitude();
 
-        return std::max(50.0f, round(attackTerm - defenseTerm));
+        return std::max(MIN_HIT_CHANCE, std::min(MAX_HIT_CHANCE, round(attackTerm - defenseTerm)));
     }
 
     void applyElementalShields(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim)
@@ -542,9 +571,9 @@ namespace MWMechanics
             // Sprint 6: Restore High Costs (5x) for everyone
             fatigueLoss *= 5.0f;
 
-            fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
-            stats.setFatigue(fatigue);
+            stats.reduceFatigue(fatigueLoss, false);
         }
+
     }
 
     float getFightDistanceBias(const MWWorld::Ptr& actor1, const MWWorld::Ptr& actor2)

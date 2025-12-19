@@ -745,6 +745,11 @@ namespace MWGui
         mHud->setDrowningTimeLeft(time, maxTime);
     }
 
+    void WindowManager::showDamage(float damage)
+    {
+        mHud->showDamage(damage);
+    }
+
     void WindowManager::removeDialog(std::unique_ptr<Layout>&& dialog)
     {
         if (!dialog)

@@ -67,6 +67,9 @@
 
 namespace
 {
+    // Sprint 7.5: Combat Tuning Constants
+    constexpr float DAMAGE_SCALING_INTENSITY = 1.0f;
+
     struct NpcParts
     {
         const ESM::RefId mSwimLeft = ESM::RefId::stringRefId("Swim Left");
@@ -576,7 +579,6 @@ namespace MWClass
         if (weaponslot != inv.end() && weaponslot->getType() == ESM::Weapon::sRecordId)
             weapon = *weaponslot;
 
-        MWBase::World* world = MWBase::Environment::get().getWorld();
 
         const float dist = MWMechanics::getMeleeWeaponReach(ptr, weapon);
         const std::pair<MWWorld::Ptr, osg::Vec3f> result = MWMechanics::getHitContact(ptr, dist);
@@ -592,9 +594,9 @@ namespace MWClass
         if (!weapon.isEmpty())
             weapskill = weapon.getClass().getEquipmentSkill(weapon);
 
-        float hitchance = MWMechanics::getHitChance(ptr, victim, static_cast<int>(getSkill(ptr, weapskill)));
-
-        return Misc::Rng::roll0to99(world->getPrng()) < hitchance;
+        // Sprint 7: Guaranteed Hits - Melee always hits if contact is made.
+        // The "hit chance" will now scale damage instead.
+        return true;
     }
 
     void Npc::hit(const MWWorld::Ptr& ptr, float attackStrength, int type, const MWWorld::Ptr& victim,
@@ -606,7 +608,7 @@ namespace MWClass
         if (weaponslot != inv.end() && weaponslot->getType() == ESM::Weapon::sRecordId)
             weapon = *weaponslot;
 
-        MWMechanics::applyFatigueLoss(ptr, weapon, attackStrength);
+
 
         if (victim.isEmpty()) // Didn't hit anything
             return;
@@ -622,9 +624,19 @@ namespace MWClass
         if (ptr == MWMechanics::getPlayer())
             MWBase::Environment::get().getWindowManager()->setEnemy(victim);
 
+        MWBase::World* world = MWBase::Environment::get().getWorld();
         float damage = 0.0f;
-        if (!success)
+
+        // Sprint 7: Calculate hit chance to determine damage scaling
+        ESM::RefId weapskill = ESM::Skill::HandToHand;
+        if (!weapon.isEmpty())
+            weapskill = weapon.getClass().getEquipmentSkill(weapon);
+        float hitchance = MWMechanics::getHitChance(ptr, victim, static_cast<int>(getSkill(ptr, weapskill)));
+
+        bool isGuaranteedHit = Settings::game().mCombatDamageScaling;
+        if (!isGuaranteedHit && Misc::Rng::roll0to99(world->getPrng()) >= hitchance)
         {
+            // miss
             MWBase::Environment::get().getLuaManager()->onHit(ptr, victim, weapon, MWWorld::Ptr(), type, attackStrength,
                 damage, false, hitPosition, false, MWMechanics::DamageSourceType::Melee);
             MWMechanics::reduceWeaponCondition(damage, false, weapon, ptr);
@@ -652,6 +664,14 @@ namespace MWClass
                     damage *= (1.0f + 3.0f * attackStrength);
                 }
             }
+            // Sprint 7.5: Apply damage scaling with intensity modifier
+            if (isGuaranteedHit)
+            {
+                float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+                float scalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(world->getPrng());
+                damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
+            }
+
             MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
             MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
             MWMechanics::resistNormalWeapon(victim, ptr, weapon, damage);
@@ -661,14 +681,20 @@ namespace MWClass
         else
         {
             MWMechanics::getHandToHandDamage(ptr, victim, damage, healthdmg, attackStrength);
+            // Sprint 7.5: Apply damage scaling with intensity modifier
+            if (isGuaranteedHit)
+            {
+                float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+                float scalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(world->getPrng());
+                damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
+            }
         }
 
-        MWBase::World* world = MWBase::Environment::get().getWorld();
         const MWWorld::Store<ESM::GameSetting>& store = world->getStore().get<ESM::GameSetting>();
 
         if (ptr == MWMechanics::getPlayer())
         {
-            ESM::RefId weapskill = ESM::Skill::HandToHand;
+            weapskill = ESM::Skill::HandToHand;
             if (!weapon.isEmpty())
                 weapskill = weapon.getClass().getEquipmentSkill(weapon);
             skillUsageSucceeded(ptr, weapskill, ESM::Skill::Weapon_SuccessfulHit);
@@ -693,7 +719,9 @@ namespace MWClass
             damage *= store.find("fCombatKODamageMult")->mValue.getFloat();
 
         // Apply "On hit" enchanted weapons
-        MWMechanics::applyOnStrikeEnchantment(ptr, victim, weapon, hitPosition);
+        // Sprint 7: Restrict enchantment trigger to the original hit chance probability to maintain balance.
+        if (Misc::Rng::roll0to99(world->getPrng()) < hitchance)
+            MWMechanics::applyOnStrikeEnchantment(ptr, victim, weapon, hitPosition);
 
         MWMechanics::applyElementalShields(ptr, victim);
 
@@ -707,6 +735,9 @@ namespace MWClass
 
         MWBase::Environment::get().getLuaManager()->onHit(ptr, victim, weapon, MWWorld::Ptr(), type, attackStrength,
             damage, healthdmg, hitPosition, true, MWMechanics::DamageSourceType::Melee);
+
+        if (ptr == MWMechanics::getPlayer() && damage > 0)
+            MWBase::Environment::get().getWindowManager()->showDamage(damage);
     }
 
     void Npc::onHit(const MWWorld::Ptr& ptr, const std::map<std::string, float>& damages, ESM::RefId object,

@@ -20,6 +20,13 @@ namespace Settings
         using WithIndex::WithIndex;
 
         SettingValue<int> mShowOwned{ mIndex, "Game", "show owned", makeEnumSanitizerInt({ 0, 1, 2, 3 }) };
+        SettingValue<bool> mCombatDamageScaling{ mIndex, "Game", "combat damage scaling" };
+        SettingValue<bool> mShowDamagePopups{ mIndex, "Game", "show damage popups" };
+        SettingValue<float> mFatigueRegenDelay{ mIndex, "Game", "fatigue regeneration delay" };
+        SettingValue<float> mPlayerFatigueRegenMult{ mIndex, "Game", "player fatigue regeneration multiplier" };
+        SettingValue<float> mCreatureFatigueRegenMult{ mIndex, "Game", "creature fatigue regeneration multiplier" };
+        SettingValue<float> mNpcFatigueRegenMult{ mIndex, "Game", "npc fatigue regeneration multiplier" };
+        SettingValue<float> mCreatureDamageMult{ mIndex, "Game", "creature damage multiplier" };
         SettingValue<bool> mShowProjectileDamage{ mIndex, "Game", "show projectile damage" };
         SettingValue<bool> mShowMeleeInfo{ mIndex, "Game", "show melee info" };
         SettingValue<bool> mShowEnchantChance{ mIndex, "Game", "show enchant chance" };

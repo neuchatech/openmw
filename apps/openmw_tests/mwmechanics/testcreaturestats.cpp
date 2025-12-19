@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 
-#include "../../mwmechanics/creaturestats.hpp"
-#include "../../mwmechanics/damagesourcetype.hpp"
+#include "../../openmw/mwmechanics/creaturestats.hpp"
+#include "../../openmw/mwmechanics/damagesourcetype.hpp"
+#include <components/settings/values.hpp>
 
 namespace
 {
     TEST(CreatureStats, TakeDamage_StaminaShield)
     {
+        Settings::StaticValues::initDefaults();
         MWMechanics::CreatureStats stats;
         
         // Setup initial stats
@@ -58,7 +60,7 @@ namespace
         // Wait, did I include Magic in the check?
         // Code: `if (source == DamageSourceType::Melee || source == DamageSourceType::Ranged)`
         
-        stats.takeDamage(30, MWMechanics::DamageSourceType::Magic);
+        stats.takeDamage(30, MWMechanics::DamageSourceType::Magical);
         EXPECT_FLOAT_EQ(stats.getFatigue().getCurrent(), 100.0f);
         EXPECT_FLOAT_EQ(stats.getHealth().getCurrent(), 70.0f);
     }

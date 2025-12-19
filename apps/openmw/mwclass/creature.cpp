@@ -55,6 +55,14 @@
 
 namespace
 {
+    // Sprint 7.5: Combat Tuning Constants
+    constexpr float DAMAGE_SCALING_INTENSITY = 1.0f;
+
+    bool isBipedal(const MWWorld::Ptr& ptr)
+    {
+        return ptr.get<ESM::Creature>()->mBase->mFlags & ESM::Creature::Bipedal;
+    }
+
     bool isFlagBitSet(const MWWorld::ConstPtr& ptr, ESM::Creature::Flags bitMask)
     {
         return (ptr.get<ESM::Creature>()->mBase->mFlags & bitMask) != 0;
@@ -239,7 +247,7 @@ namespace MWClass
                 weapon = *weaponslot;
         }
 
-        MWBase::World* world = MWBase::Environment::get().getWorld();
+
 
         const float dist = MWMechanics::getMeleeWeaponReach(ptr, weapon);
         const std::pair<MWWorld::Ptr, osg::Vec3f> result = MWMechanics::getHitContact(ptr, dist);
@@ -251,8 +259,9 @@ namespace MWClass
         victim = result.first;
         hitPosition = result.second;
 
-        float hitchance = MWMechanics::getHitChance(ptr, victim, ptr.get<ESM::Creature>()->mBase->mData.mCombat);
-        return Misc::Rng::roll0to99(world->getPrng()) < hitchance;
+        // Sprint 7: Guaranteed Hits - Melee always hits if contact is made.
+        // The "hit chance" will now scale damage instead.
+        return true;
     }
 
     void Creature::hit(const MWWorld::Ptr& ptr, float attackStrength, int type, const MWWorld::Ptr& victim,
@@ -272,7 +281,16 @@ namespace MWClass
                 weapon = *weaponslot;
         }
 
-        MWMechanics::applyFatigueLoss(ptr, weapon, attackStrength);
+
+
+        // Sprint 7: Calculate hit chance for damage scaling
+        float attackerSkill = 0;
+        if (hasInventoryStore(ptr))
+            attackerSkill = ptr.get<ESM::Creature>()->mBase->mData.mCombat;
+        else
+            attackerSkill = ptr.get<ESM::Creature>()->mBase->mData.mCombat; // Simplified for default creature attacks
+        
+        float hitchance = MWMechanics::getHitChance(ptr, victim, static_cast<int>(attackerSkill));
 
         if (victim.isEmpty())
             return; // Didn't hit anything
@@ -285,7 +303,8 @@ namespace MWClass
         if (!MWMechanics::isInMeleeReach(ptr, victim, MWMechanics::getMeleeWeaponReach(ptr, weapon)))
             return;
 
-        if (!success)
+        bool isGuaranteedHit = Settings::game().mCombatDamageScaling;
+        if (!isGuaranteedHit && Misc::Rng::roll0to99(MWBase::Environment::get().getWorld()->getPrng()) >= hitchance)
         {
             MWBase::Environment::get().getLuaManager()->onHit(ptr, victim, weapon, MWWorld::Ptr(), type, attackStrength,
                 0.0f, false, hitPosition, false, MWMechanics::DamageSourceType::Melee);
@@ -313,6 +332,14 @@ namespace MWClass
         }
 
         float damage = min + (max - min) * attackStrength;
+        // Sprint 7.5: Apply damage scaling with intensity modifier
+        if (isGuaranteedHit)
+        {
+            float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+            float naturalScalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(MWBase::Environment::get().getWorld()->getPrng());
+            damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (naturalScalingRoll * DAMAGE_SCALING_INTENSITY);
+        }
+
         bool healthdmg = true;
         if (!weapon.isEmpty())
         {
@@ -327,23 +354,41 @@ namespace MWClass
             {
                 damage = attack[0] + ((attack[1] - attack[0]) * attackStrength);
                 // Sprint 2: Heavy Attack Damage Scaling
-                // Sprint 2: Heavy Attack Damage Scaling
                 if (attackStrength > 0.0f)
                 {
                     damage *= (1.0f + 3.0f * attackStrength);
                 }
+                // Sprint 7.5: Apply damage scaling with intensity modifier
+                if (isGuaranteedHit)
+                {
+                    float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+                    float scalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(MWBase::Environment::get().getWorld()->getPrng());
+                    damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
+                }
+
                 MWMechanics::adjustWeaponDamage(damage, weapon, ptr);
                 MWMechanics::reduceWeaponCondition(damage, true, weapon, ptr);
                 MWMechanics::resistNormalWeapon(victim, ptr, weapon, damage);
             }
 
             // Apply "On hit" enchanted weapons
-            MWMechanics::applyOnStrikeEnchantment(ptr, victim, weapon, hitPosition);
+            // Sprint 7: Restrict enchantment trigger to the original hit chance probability to maintain balance.
+            if (!weapon.isEmpty() && (Misc::Rng::roll0to99(MWBase::Environment::get().getWorld()->getPrng()) < hitchance))
+                MWMechanics::applyOnStrikeEnchantment(ptr, victim, weapon, hitPosition);
         }
         else if (isBipedal(ptr))
         {
             MWMechanics::getHandToHandDamage(ptr, victim, damage, healthdmg, attackStrength);
+            // Sprint 7.5: Apply damage scaling with intensity modifier
+            if (isGuaranteedHit)
+            {
+                float fHitChance = std::clamp(hitchance / 100.f, 0.0f, 1.0f);
+                float scalingRoll = fHitChance + (1.0f - fHitChance) * Misc::Rng::rollClosedProbability(MWBase::Environment::get().getWorld()->getPrng());
+                damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
+            }
         }
+
+        damage *= Settings::game().mCreatureDamageMult;
 
         MWMechanics::applyElementalShields(ptr, victim);
 
@@ -354,6 +399,9 @@ namespace MWClass
 
         MWBase::Environment::get().getLuaManager()->onHit(ptr, victim, weapon, MWWorld::Ptr(), type, attackStrength,
             damage, healthdmg, hitPosition, true, MWMechanics::DamageSourceType::Melee);
+
+        if (ptr == MWMechanics::getPlayer() && damage > 0)
+            MWBase::Environment::get().getWindowManager()->showDamage(damage);
     }
 
     void Creature::onHit(const MWWorld::Ptr& ptr, const std::map<std::string, float>& damages, ESM::RefId object,

@@ -292,6 +292,8 @@ namespace MWBase
 
         virtual void changePointer(const std::string& name) = 0;
 
+        virtual void showDamage(float damage) = 0;
+
         virtual void setEnemy(const MWWorld::Ptr& enemy) = 0;
 
         virtual std::size_t getMessagesCount() const = 0;

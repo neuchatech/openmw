@@ -48,4 +48,4 @@ if %ERRORLEVEL% EQU 0 (
     echo !             BUILD FAILED             !
     echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )
-pause
+:: pause

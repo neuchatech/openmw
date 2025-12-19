@@ -315,6 +315,8 @@ namespace MWGui
 
         void changePointer(const std::string& name) override;
 
+        void showDamage(float damage) override;
+
         void setEnemy(const MWWorld::Ptr& enemy) override;
 
         std::size_t getMessagesCount() const override;

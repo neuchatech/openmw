@@ -9,6 +9,16 @@
         <Widget type="ProgressBar" skin="MW_EnergyBar_Green" position="82 131 65 12" align="Left Bottom" name="EnemyFatigue">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="TextBox" skin="SandText" position="13 115 65 16" align="Left Bottom" name="DamageText">
+            <Property key="Visible" value="false"/>
+            <Property key="TextAlign" value="Center"/>
+            <Property key="TextShadow" value="true"/>
+            <Property key="TextShadowColour" value="0 0 0"/>
+            <Property key="NeedMouse" value="false"/>
+            <Property key="Caption" value="0"/>
+            <Property key="FontName" value="Default"/>
+            <Property key="TextColour" value="1 0.1 0.1"/>
+        </Widget>
         <Widget type="Button" skin="" position="13 146 65 12" align="Left Bottom" name="HealthFrame">
             <UserString key="ToolTipType" value="Layout"/>
             <UserString key="ToolTipLayout" value="HealthToolTip"/>
