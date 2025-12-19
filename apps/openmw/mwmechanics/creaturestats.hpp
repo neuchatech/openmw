@@ -154,7 +154,7 @@ namespace MWMechanics
         // Shortcut to set only the base
         void setAttribute(ESM::RefId id, float base);
 
-        void takeDamage(float damage, DamageSourceType source);
+        void takeDamage(float damage, DamageSourceType source, float fatigueMult = 1.0f);
 
         void setHealth(const DynamicStat<float>& value);
 

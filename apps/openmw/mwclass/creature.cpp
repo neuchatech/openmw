@@ -388,7 +388,6 @@ namespace MWClass
             }
         }
 
-        damage *= Settings::game().mCreatureDamageMult;
 
         MWMechanics::applyElementalShields(ptr, victim);
 
@@ -460,10 +459,23 @@ namespace MWClass
         if (!object.empty())
             stats.setLastHitObject(object);
 
+        float healthMult = 1.0f;
+        float fatigueMult = 1.0f;
+        if (!attacker.isEmpty() && attacker == MWMechanics::getPlayer())
+        {
+            healthMult = Settings::game().mPlayerHealthDamageMult;
+            fatigueMult = Settings::game().mPlayerFatigueDamageMult;
+        }
+        else
+        {
+            healthMult = Settings::game().mEnemyHealthDamageMult;
+            fatigueMult = Settings::game().mEnemyFatigueDamageMult;
+        }
+
         bool hasDamage = false;
         bool hasHealthDamage = false;
         float healthDamage = 0.f;
-        for (auto& [stat, damage] : damages)
+        for (auto [stat, damage] : damages)
         {
             if (damage < 0.001f)
                 continue;
@@ -472,13 +484,14 @@ namespace MWClass
             if (stat == "health")
             {
                 hasHealthDamage = true;
-                healthDamage = damage;
-                stats.takeDamage(damage, sourceType);
+                healthDamage = damage * healthMult;
+                stats.takeDamage(healthDamage, sourceType, fatigueMult);
             }
             else if (stat == "fatigue")
             {
+                float scaledFatigueDamage = damage * fatigueMult;
                 MWMechanics::DynamicStat<float> fatigue(getCreatureStats(ptr).getFatigue());
-                fatigue.setCurrent(fatigue.getCurrent() - damage, true);
+                fatigue.setCurrent(fatigue.getCurrent() - scaledFatigueDamage, true);
                 stats.setFatigue(fatigue);
             }
             else if (stat == "magicka")

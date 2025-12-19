@@ -26,7 +26,10 @@ namespace Settings
         SettingValue<float> mPlayerFatigueRegenMult{ mIndex, "Game", "player fatigue regeneration multiplier" };
         SettingValue<float> mCreatureFatigueRegenMult{ mIndex, "Game", "creature fatigue regeneration multiplier" };
         SettingValue<float> mNpcFatigueRegenMult{ mIndex, "Game", "npc fatigue regeneration multiplier" };
-        SettingValue<float> mCreatureDamageMult{ mIndex, "Game", "creature damage multiplier" };
+        SettingValue<float> mPlayerHealthDamageMult{ mIndex, "Game", "player health damage multiplier" };
+        SettingValue<float> mPlayerFatigueDamageMult{ mIndex, "Game", "player fatigue damage multiplier" };
+        SettingValue<float> mEnemyHealthDamageMult{ mIndex, "Game", "enemy health damage multiplier" };
+        SettingValue<float> mEnemyFatigueDamageMult{ mIndex, "Game", "enemy fatigue damage multiplier" };
         SettingValue<bool> mShowProjectileDamage{ mIndex, "Game", "show projectile damage" };
         SettingValue<bool> mShowMeleeInfo{ mIndex, "Game", "show melee info" };
         SettingValue<bool> mShowEnchantChance{ mIndex, "Game", "show enchant chance" };

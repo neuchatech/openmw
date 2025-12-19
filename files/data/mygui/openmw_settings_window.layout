@@ -138,7 +138,10 @@
                         <Property key="Caption" value="#{OMWEngine:Crosshair}"/>
                     </Widget>
                 </Widget>
-                <Widget type="HBox" position="4 370 340 28">
+            </Widget>
+            <Widget type="TabItem">
+                <Property key="Caption" value=" #{OMWEngine:BalanceTab} "/>
+                <Widget type="HBox" position="4 4 340 28">
                     <Widget type="AutoSizedButton" skin="MW_Button" position="0 0 24 24" align="Left Top">
                         <UserString key="SettingCategory" value="Game"/>
                         <UserString key="SettingName" value="combat damage scaling"/>
@@ -148,7 +151,7 @@
                         <Property key="Caption" value="#{OMWEngine:CombatDamageScaling}"/>
                     </Widget>
                 </Widget>
-                <Widget type="HBox" position="4 400 340 28">
+                <Widget type="HBox" position="4 34 340 28">
                     <Widget type="AutoSizedButton" skin="MW_Button" position="0 0 24 24" align="Left Top">
                         <UserString key="SettingCategory" value="Game"/>
                         <UserString key="SettingName" value="show damage popups"/>
@@ -158,7 +161,7 @@
                         <Property key="Caption" value="#{OMWEngine:ShowDamagePopups}"/>
                     </Widget>
                 </Widget>
-                <Widget type="Widget" position="4 430 352 54" align="Left Top HStretch">
+                <Widget type="Widget" position="4 64 352 54" align="Left Top HStretch">
                     <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="FatigueRegenDelayText">
                         <Property key="Caption" value="#{OMWEngine:FatigueRegenDelay}"/>
                     </Widget>
@@ -175,7 +178,7 @@
                         <UserString key="SettingLabelCaption" value="FatigueRegenDelayValue"/>
                     </Widget>
                 </Widget>
-                <Widget type="Widget" position="4 490 352 54" align="Left Top HStretch">
+                <Widget type="Widget" position="4 124 352 54" align="Left Top HStretch">
                     <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="PlayerFatigueRegenMultText">
                         <Property key="Caption" value="#{OMWEngine:PlayerFatigueRegenMult}"/>
                     </Widget>
@@ -192,7 +195,7 @@
                         <UserString key="SettingLabelCaption" value="PlayerFatigueRegenMultValue"/>
                     </Widget>
                 </Widget>
-                <Widget type="Widget" position="4 550 352 54" align="Left Top HStretch">
+                <Widget type="Widget" position="4 184 352 54" align="Left Top HStretch">
                     <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="CreatureFatigueRegenMultText">
                         <Property key="Caption" value="#{OMWEngine:CreatureFatigueRegenMult}"/>
                     </Widget>
@@ -209,7 +212,7 @@
                         <UserString key="SettingLabelCaption" value="CreatureFatigueRegenMultValue"/>
                     </Widget>
                 </Widget>
-                <Widget type="Widget" position="4 610 352 54" align="Left Top HStretch">
+                <Widget type="Widget" position="4 244 352 54" align="Left Top HStretch">
                     <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="NpcFatigueRegenMultText">
                         <Property key="Caption" value="#{OMWEngine:NpcFatigueRegenMult}"/>
                     </Widget>
@@ -226,21 +229,72 @@
                         <UserString key="SettingLabelCaption" value="NpcFatigueRegenMultValue"/>
                     </Widget>
                 </Widget>
-                <Widget type="Widget" position="4 670 352 54" align="Left Top HStretch">
-                    <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="CreatureDamageMultText">
-                        <Property key="Caption" value="#{OMWEngine:CreatureDamageMult}"/>
+                <Widget type="Widget" position="4 304 352 54" align="Left Top HStretch">
+                    <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="PlayerHealthDamageMultText">
+                        <Property key="Caption" value="#{OMWEngine:PlayerHealthDamageMult}"/>
                     </Widget>
                     <Widget type="ScrollBar" skin="MW_HScroll" position="0 20 352 14" align="Left Top HStretch">
-                        <Property key="Range" value="51"/>
+                        <Property key="Range" value="101"/>
                         <Property key="Page" value="1"/>
                         <UserString key="SettingType" value="Slider"/>
                         <UserString key="SettingCategory" value="Game"/>
-                        <UserString key="SettingName" value="creature damage multiplier"/>
+                        <UserString key="SettingName" value="player health damage multiplier"/>
                         <UserString key="SettingValueType" value="Float"/>
                         <UserString key="SettingMin" value="0.0"/>
-                        <UserString key="SettingMax" value="5.0"/>
-                        <UserString key="SettingLabelWidget" value="CreatureDamageMultText"/>
-                        <UserString key="SettingLabelCaption" value="CreatureDamageMultValue"/>
+                        <UserString key="SettingMax" value="10.0"/>
+                        <UserString key="SettingLabelWidget" value="PlayerHealthDamageMultText"/>
+                        <UserString key="SettingLabelCaption" value="PlayerHealthDamageMultValue"/>
+                    </Widget>
+                </Widget>
+                <Widget type="Widget" position="4 364 352 54" align="Left Top HStretch">
+                    <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="PlayerFatigueDamageMultText">
+                        <Property key="Caption" value="#{OMWEngine:PlayerFatigueDamageMult}"/>
+                    </Widget>
+                    <Widget type="ScrollBar" skin="MW_HScroll" position="0 20 352 14" align="Left Top HStretch">
+                        <Property key="Range" value="101"/>
+                        <Property key="Page" value="1"/>
+                        <UserString key="SettingType" value="Slider"/>
+                        <UserString key="SettingCategory" value="Game"/>
+                        <UserString key="SettingName" value="player fatigue damage multiplier"/>
+                        <UserString key="SettingValueType" value="Float"/>
+                        <UserString key="SettingMin" value="0.0"/>
+                        <UserString key="SettingMax" value="10.0"/>
+                        <UserString key="SettingLabelWidget" value="PlayerFatigueDamageMultText"/>
+                        <UserString key="SettingLabelCaption" value="PlayerFatigueDamageMultValue"/>
+                    </Widget>
+                </Widget>
+                <Widget type="Widget" position="4 424 352 54" align="Left Top HStretch">
+                    <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="EnemyHealthDamageMultText">
+                        <Property key="Caption" value="#{OMWEngine:EnemyHealthDamageMult}"/>
+                    </Widget>
+                    <Widget type="ScrollBar" skin="MW_HScroll" position="0 20 352 14" align="Left Top HStretch">
+                        <Property key="Range" value="101"/>
+                        <Property key="Page" value="1"/>
+                        <UserString key="SettingType" value="Slider"/>
+                        <UserString key="SettingCategory" value="Game"/>
+                        <UserString key="SettingName" value="enemy health damage multiplier"/>
+                        <UserString key="SettingValueType" value="Float"/>
+                        <UserString key="SettingMin" value="0.0"/>
+                        <UserString key="SettingMax" value="10.0"/>
+                        <UserString key="SettingLabelWidget" value="EnemyHealthDamageMultText"/>
+                        <UserString key="SettingLabelCaption" value="EnemyHealthDamageMultValue"/>
+                    </Widget>
+                </Widget>
+                <Widget type="Widget" position="4 484 352 54" align="Left Top HStretch">
+                    <Widget type="TextBox" skin="NormalText" position="0 0 352 16" align="Left Top" name="EnemyFatigueDamageMultText">
+                        <Property key="Caption" value="#{OMWEngine:EnemyFatigueDamageMult}"/>
+                    </Widget>
+                    <Widget type="ScrollBar" skin="MW_HScroll" position="0 20 352 14" align="Left Top HStretch">
+                        <Property key="Range" value="101"/>
+                        <Property key="Page" value="1"/>
+                        <UserString key="SettingType" value="Slider"/>
+                        <UserString key="SettingCategory" value="Game"/>
+                        <UserString key="SettingName" value="enemy fatigue damage multiplier"/>
+                        <UserString key="SettingValueType" value="Float"/>
+                        <UserString key="SettingMin" value="0.0"/>
+                        <UserString key="SettingMax" value="10.0"/>
+                        <UserString key="SettingLabelWidget" value="EnemyFatigueDamageMultText"/>
+                        <UserString key="SettingLabelCaption" value="EnemyFatigueDamageMultValue"/>
                     </Widget>
                 </Widget>
             </Widget>

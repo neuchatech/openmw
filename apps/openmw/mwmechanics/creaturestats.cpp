@@ -156,7 +156,7 @@ namespace MWMechanics
         }
     }
 
-    void CreatureStats::takeDamage(float damage, DamageSourceType source)
+    void CreatureStats::takeDamage(float damage, DamageSourceType source, float fatigueMult)
     {
         if (damage <= 0.f)
             return;
@@ -169,16 +169,15 @@ namespace MWMechanics
 
             if (currentFatigue > 0.f)
             {
-                // Sprint 4: Smart Fatigue - 5x Damage to Fatigue Only
-                // Damage is multiplied by 5 for fatigue absorption calculation.
-                // If fatigue absorbs it, we subtract the *unmultiplied* amount from the health damage.
-                float absorbed = std::min(currentFatigue, damage * 5.0f);
+                // Sprint 4: Smart Fatigue - Default 5x Damage to Fatigue Only
+                // Multiplied by fatigueMult for granular control
+                float factor = 5.0f * fatigueMult;
+                float absorbed = std::min(currentFatigue, damage * factor);
                 reduceFatigue(absorbed, true);
 
                 // Reduce actual health damage by the amount absorbed (converted back to health units)
-                damage -= (absorbed / 5.0f);
+                damage -= (factor > 0 ? (absorbed / factor) : 0);
             }
-
         }
 
         if (damage > 0.f)
