@@ -272,6 +272,9 @@ namespace MWClass
         if (stats.getDrawState() != MWMechanics::DrawState::Weapon)
             return;
 
+        if (victim.isEmpty() || !victim.getClass().isActor())
+            return; // Didn't hit anything
+
         MWWorld::Ptr weapon;
         if (hasInventoryStore(ptr))
         {
@@ -281,19 +284,9 @@ namespace MWClass
                 weapon = *weaponslot;
         }
 
-
-
         // Sprint 7: Calculate hit chance for damage scaling
-        float attackerSkill = 0;
-        if (hasInventoryStore(ptr))
-            attackerSkill = ptr.get<ESM::Creature>()->mBase->mData.mCombat;
-        else
-            attackerSkill = ptr.get<ESM::Creature>()->mBase->mData.mCombat; // Simplified for default creature attacks
-        
+        const float attackerSkill = ptr.get<ESM::Creature>()->mBase->mData.mCombat;
         float hitchance = MWMechanics::getHitChance(ptr, victim, static_cast<int>(attackerSkill));
-
-        if (victim.isEmpty())
-            return; // Didn't hit anything
 
         const MWWorld::Class& othercls = victim.getClass();
         MWMechanics::CreatureStats& otherstats = othercls.getCreatureStats(victim);

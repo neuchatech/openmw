@@ -610,7 +610,7 @@ namespace MWClass
 
 
 
-        if (victim.isEmpty()) // Didn't hit anything
+        if (victim.isEmpty() || !victim.getClass().isActor()) // Didn't hit anything
             return;
 
         const MWWorld::Class& othercls = victim.getClass();

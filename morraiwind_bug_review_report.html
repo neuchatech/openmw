@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Morraiwind Bug Review Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f5ef;
+      --paper: #fffdf8;
+      --ink: #25231f;
+      --muted: #6f6a60;
+      --line: #d7d0c2;
+      --accent: #2f6f73;
+      --accent-2: #7a4f20;
+      --danger: #a9352c;
+      --warn: #9a6a15;
+      --ok: #237047;
+      --code-bg: #1f2328;
+      --code-ink: #e7edf3;
+      --add: #d7f2df;
+      --del: #ffd9d6;
+      --note: #e8f2f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    header {
+      padding: 36px 28px 28px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffdf8 0%, #f3efe5 100%);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 1180px;
+      margin: 0 auto 10px;
+      font-size: 32px;
+    }
+
+    header p {
+      max-width: 1180px;
+      margin: 0 auto;
+      color: var(--muted);
+    }
+
+    h2 {
+      margin-top: 34px;
+      margin-bottom: 12px;
+      font-size: 22px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .finding {
+      margin: 16px 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+
+    .finding.high {
+      border-left-color: var(--danger);
+    }
+
+    .finding.medium {
+      border-left-color: var(--warn);
+    }
+
+    .finding.low {
+      border-left-color: var(--accent);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 4px;
+    }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 9px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill.high {
+      color: var(--danger);
+      border-color: #e5aaa5;
+      background: #fff4f3;
+    }
+
+    .pill.medium {
+      color: var(--warn);
+      border-color: #dfbf7a;
+      background: #fff7e5;
+    }
+
+    .pill.ok {
+      color: var(--ok);
+      border-color: #a8d8bd;
+      background: #f2fff6;
+    }
+
+    .note {
+      margin: 12px 0;
+      padding: 12px 14px;
+      background: var(--note);
+      border: 1px solid #c5dcdf;
+      border-radius: 8px;
+    }
+
+    .warnbox {
+      margin: 12px 0;
+      padding: 12px 14px;
+      background: #fff7e5;
+      border: 1px solid #dfbf7a;
+      border-radius: 8px;
+    }
+
+    .dangerbox {
+      margin: 12px 0;
+      padding: 12px 14px;
+      background: #fff4f3;
+      border: 1px solid #e5aaa5;
+      border-radius: 8px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.94em;
+    }
+
+    pre {
+      overflow: auto;
+      margin: 12px 0;
+      padding: 14px;
+      color: var(--code-ink);
+      background: var(--code-bg);
+      border-radius: 8px;
+      line-height: 1.42;
+      tab-size: 4;
+    }
+
+    pre code {
+      font-size: 13px;
+    }
+
+    .diff-add {
+      color: #8ff0a4;
+    }
+
+    .diff-del {
+      color: #ffb4ad;
+    }
+
+    .diff-note {
+      color: #ffe08a;
+    }
+
+    .path {
+      font-weight: 650;
+      color: var(--accent-2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eee7d9;
+      font-weight: 650;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    ul, ol {
+      padding-left: 22px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 18px;
+      }
+
+      header {
+        padding: 28px 18px 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Morraiwind Bug Review Report</h1>
+    <p>Static review of the <code>morraiwind</code> branch, its Dec 17-19 2025 fork commits, and the current dirty working tree. Generated on 2026-06-06.</p>
+  </header>
+
+  <main>
+    <section>
+      <div class="grid">
+        <div class="card">
+          <h3>Branch</h3>
+          <p><code>morraiwind</code> at <code>8907fd284b</code>, forked from upstream merge-base <code>1e5979b80f</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Commit Range</h3>
+          <p>Seven fork commits, with the bug-relevant work in <code>259c8b66fd</code>, <code>668d1add5a</code>, <code>da5b356846</code>, and <code>8907fd284b</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Worktree</h3>
+          <p>Dirty. Staged changes touch projectile, combat, and spell guard code, so they are included in risk analysis.</p>
+        </div>
+      </div>
+
+      <h2>Executive Summary</h2>
+      <div class="finding high">
+        <h3>Most likely crash cause: empty victim used before validation in creature melee hits</h3>
+        <div class="meta">
+          <span class="pill high">Severity: critical</span>
+          <span class="pill high">Confidence: high</span>
+          <span class="pill">Commit: da5b356846</span>
+          <span class="pill">Path: apps/openmw/mwclass/creature.cpp</span>
+        </div>
+        <p><code>Creature::hit</code> now calculates hit chance before checking whether <code>victim</code> is empty. If a creature attack animation reaches its hit key while no target was actually contacted, <code>getHitChance</code> dereferences the empty <code>victim</code>. This exactly fits an intermittent crash while enemies start or finish attacks.</p>
+      </div>
+
+      <div class="finding high">
+        <h3>Second crash path: ranged hits now notify Lua even without a valid actor victim</h3>
+        <div class="meta">
+          <span class="pill high">Severity: critical</span>
+          <span class="pill high">Confidence: high</span>
+          <span class="pill">Commit: da5b356846</span>
+          <span class="pill">Path: apps/openmw/mwmechanics/combat.cpp</span>
+        </div>
+        <p><code>projectileHit</code> moved <code>LuaManager::onHit</code> outside the <code>validVictim</code> block. <code>LuaManager::onHit</code> sends a local event to <code>victim</code>, and <code>sendLocalEvent</code> calls <code>getId(victim)</code>, which calls <code>victim.getCellRef()</code>. An empty projectile target can therefore crash deterministically.</p>
+      </div>
+
+      <div class="finding high">
+        <h3>Most likely black map cause: local map RTT was not updated for the new fog shader contract</h3>
+        <div class="meta">
+          <span class="pill high">Severity: high</span>
+          <span class="pill high">Confidence: high</span>
+          <span class="pill">Commit: 259c8b66fd / 668d1add5a</span>
+          <span class="pill">Paths: localmap.cpp, fog.glsl, renderingmanager.cpp</span>
+        </div>
+        <p>The local map render-to-texture pass still disables only old fixed-function/old shader fog uniforms. The new fog shader ignores that path and reads <code>fogStart</code>, <code>fogEnd</code>, <code>fogColor</code>, <code>exponentialFogDensity</code>, <code>heightFogEnabled</code>, <code>cameraPos</code>, and <code>invViewMatrix</code>. Those are inherited from the gameplay camera, not the map camera. A re-rendered map segment can be fogged or sky-blended into black/dark output.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Commit Timeline</h2>
+      <table>
+        <thead>
+          <tr><th>Commit</th><th>Date</th><th>Risk for the two reported bugs</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>d527675b06</code></td>
+            <td>2025-12-17</td>
+            <td>Movement speed/config docs. Low direct relevance.</td>
+          </tr>
+          <tr>
+            <td><code>bce3119185</code></td>
+            <td>2025-12-17</td>
+            <td>First stamina combat implementation. Introduced fatigue API changes and combat behavior changes.</td>
+          </tr>
+          <tr>
+            <td><code>6ad949cefe</code></td>
+            <td>2025-12-18</td>
+            <td>Combat tuning. Medium crash relevance.</td>
+          </tr>
+          <tr>
+            <td><code>259c8b66fd</code></td>
+            <td>2025-12-18</td>
+            <td>Fog rework. High map relevance: shader fog uniforms, sky blending, forced shader path.</td>
+          </tr>
+          <tr>
+            <td><code>668d1add5a</code></td>
+            <td>2025-12-18</td>
+            <td>Graphic rework/settings. High map relevance due render distance, distant terrain, shaders, shadows.</td>
+          </tr>
+          <tr>
+            <td><code>da5b356846</code></td>
+            <td>2025-12-19</td>
+            <td>Large combat rewrite. High crash relevance: guaranteed hits, projectile hit refactor, damage scaling.</td>
+          </tr>
+          <tr>
+            <td><code>8907fd284b</code></td>
+            <td>2025-12-19</td>
+            <td>Balance settings. Medium crash/balance relevance through multipliers and further Creature/NPC edits.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Crash Findings</h2>
+
+      <div class="finding high">
+        <h3>1. <code>Creature::hit</code> dereferences empty <code>victim</code></h3>
+        <p><span class="path">apps/openmw/mwclass/creature.cpp:286-295</span></p>
+        <p>In upstream, <code>hit</code> applied fatigue loss, then returned immediately if <code>victim.isEmpty()</code>. The Dec 19 rewrite moved hit-chance calculation above that guard. <code>getHitChance</code> reads <code>victim.getClass().getCreatureStats(victim)</code>, so the empty-victim case crashes before the intended guard.</p>
+<pre><code>@@ Creature::hit(...)
+         MWWorld::Ptr weapon;
+         ...
+-        MWMechanics::applyFatigueLoss(ptr, weapon, attackStrength);
++
++        // Sprint 7: Calculate hit chance for damage scaling
++        float attackerSkill = ptr.get&lt;ESM::Creature&gt;()-&gt;mBase-&gt;mData.mCombat;
++        float hitchance = MWMechanics::getHitChance(ptr, victim, static_cast&lt;int&gt;(attackerSkill));
+
+         if (victim.isEmpty())
+             return; // Didn't hit anything
+
+Annotation: the guard is now too late. getHitChance dereferences victim.</code></pre>
+        <div class="dangerbox">
+          <strong>Likely runtime path:</strong> <code>CharacterController::prepareHit</code> calls <code>evaluateHit</code>; if no contact exists, <code>mAttackVictim</code> remains empty but the attack animation can still reach the hit key and call <code>charClass.hit</code>. This is intermittent because it depends on animation timing, target movement, reach, and collision.
+        </div>
+        <p><strong>Fix direction:</strong> Move <code>if (victim.isEmpty()) return;</code> above <code>getHitChance</code>. Also make <code>getHitChance</code> robust by returning a safe default when either <code>attacker</code> or <code>victim</code> is empty or non-actor.</p>
+      </div>
+
+      <div class="finding high">
+        <h3>2. <code>projectileHit</code> sends a Lua Hit event for empty/non-actor victims</h3>
+        <p><span class="path">apps/openmw/mwmechanics/combat.cpp:326-339</span> and <span class="path">apps/openmw/mwlua/luamanagerimp.cpp:557</span></p>
+        <p>Before the rewrite, the Lua hit notification for projectiles was inside <code>if (validVictim)</code>. It is now unconditional. When a projectile hits terrain, water, or any no-target case, this can pass an empty <code>victim</code> to Lua local event dispatch.</p>
+<pre><code>@@ projectileHit(...)
+-        if (validVictim)
+-        {
+-            ...
+-            MWBase::Environment::get().getLuaManager()-&gt;onHit(attacker, victim, weapon, projectile, ...);
+-        }
++        MWBase::Environment::get().getLuaManager()-&gt;onHit(attacker, victim, weapon, projectile, 0,
++            attackStrength, damage, true, hitPosition, true, MWMechanics::DamageSourceType::Ranged);
+
+@@ LuaManager::onHit(...)
+         sendLocalEvent(victim, "Hit", data);
+
+@@ getId(...)
+         return ptr.getCellRef().getRefNum();
+
+Annotation: empty victim reaches getCellRef().</code></pre>
+        <p><strong>Fix direction:</strong> Restore the upstream invariant: only call <code>onHit</code> for valid actor victims. If Lua needs miss/world-impact events later, create a separate event that does not require a local script target.</p>
+      </div>
+
+      <div class="finding high">
+        <h3>3. Staged projectile guard is incomplete and can itself crash</h3>
+        <p><span class="path">apps/openmw/mwworld/projectilemanager.cpp:532-537</span></p>
+        <p>The staged working-tree change tries to avoid empty caster crashes, but it calls <code>target.getClass()</code> without checking <code>target.isEmpty()</code>.</p>
+<pre><code>-            if (caster.isEmpty())
++            if (caster.isEmpty() &amp;&amp; target.getClass().isActor())
+                 caster = target;
+
+Annotation: this must be `!target.isEmpty() &amp;&amp; target.getClass().isActor()`.</code></pre>
+        <p><strong>Fix direction:</strong> Change to <code>if (caster.isEmpty() &amp;&amp; !target.isEmpty() &amp;&amp; target.getClass().isActor())</code>. Then audit the rest of <code>ProjectileManager::processHits</code>, because magic bolt handling still uses <code>caster.getCell()</code> without an empty check.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3>4. <code>getHitChance</code> staged guard covers attacker only, not victim</h3>
+        <p><span class="path">apps/openmw/mwmechanics/combat.cpp:345-357</span></p>
+        <p>The staged change adds an attacker guard, but <code>victim.getClass()</code> remains unconditional. That does not protect the <code>Creature::hit</code> crash.</p>
+<pre><code>+        if (attacker.isEmpty() || !attacker.getClass().isActor())
+            return 100.0f;
+
+         MWMechanics::CreatureStats&amp; victimStats = victim.getClass().getCreatureStats(victim);
+
+Annotation: victim needs the same kind of guard.</code></pre>
+      </div>
+
+      <div class="finding medium">
+        <h3>5. Tests do not currently prove the stamina shield implementation</h3>
+        <p><span class="path">apps/openmw_tests/mwmechanics/testcreaturestats.cpp</span> and <span class="path">apps/openmw/mwmechanics/creaturestats.cpp:174-179</span></p>
+        <p>The test claims 40 melee damage drains 40 fatigue and leaves health unchanged. The implementation uses <code>factor = 5.0f * fatigueMult</code>, so 40 damage with 100 fatigue absorbs 100 fatigue and still deals 20 health damage. Either the test is stale or the implementation factor is wrong.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Map Findings</h2>
+
+      <div class="finding high">
+        <h3>1. Local map RTT still disables old fog, but the shaders now use new uniforms</h3>
+        <p><span class="path">apps/openmw/mwrender/localmap.cpp:739-749</span>, <span class="path">files/shaders/compatibility/fog.glsl:1-14</span></p>
+        <p>The local map renderer comments say shader fog does not respect disabled <code>GL_FOG</code>, so it overrides old uniforms. After the fog rework, that is no longer enough.</p>
+<pre><code>@@ LocalMapRenderToTexture::setDefaults(...)
+         // assign large value to effectively turn off fog
+         // shaders don't respect glDisable(GL_FOG)
+         osg::ref_ptr&lt;osg::Fog&gt; fog(new osg::Fog);
+         fog-&gt;setStart(10000000);
+         fog-&gt;setEnd(10000000);
+         stateset-&gt;setAttributeAndModes(fog, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+
+         // turn of sky blending
+         stateset-&gt;addUniform(new osg::Uniform("far", 10000000.0f));
+         stateset-&gt;addUniform(new osg::Uniform("skyBlendingStart", 8000000.0f));
+         stateset-&gt;addUniform(new osg::Uniform("screenRes", osg::Vec2f{ 1, 1 }));
+
+@@ fog.glsl after fog rework
++uniform float exponentialFogDensity;
++uniform bool heightFogEnabled;
++uniform float heightFogDensity;
++uniform float heightFogFalloff;
++uniform float heightFogOffset;
++uniform vec3 cameraPos;
++uniform mat4 invViewMatrix;
++uniform float fogStart;
++uniform float fogEnd;
++uniform vec4 fogColor;
+
+Annotation: local map overrides none of the new fog controls.</code></pre>
+        <p><strong>Why this makes black maps plausible:</strong> local map segments are generated by a top-down RTT camera, but the new height fog uses <code>cameraPos</code> and <code>invViewMatrix</code> from the gameplay camera. If the global fog color is black/dark, or if inherited uniforms are still at defaults, re-rendered segments can collapse toward black. Exploration updates trigger exactly these segment/fog texture updates.</p>
+        <p><strong>Fix direction:</strong> In <code>LocalMapRenderToTexture::setDefaults</code>, override the new uniforms for the map camera. The simplest safe fix is to disable shader fog for the RTT pass: huge <code>fogStart</code>/<code>fogEnd</code>, <code>exponentialFogDensity = 0</code>, <code>heightFogEnabled = false</code>, and explicit <code>fogColor</code>. Consider doing the same in <code>characterpreview.cpp</code>, which has the same old <code>skyBlendingStart</code> override pattern.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3>2. Forced shaders and new defaults make the local map hit the risky path by default</h3>
+        <p><span class="path">files/settings-default.cfg</span></p>
+        <p>The graphics commits changed default settings to high-distance, shader-heavy rendering: <code>force shaders = true</code>, <code>radial fog = true</code>, <code>exponential fog = true</code>, <code>height fog = true</code>, <code>sky blending = true</code>, <code>distant terrain = true</code>, and <code>viewing distance = 122880</code>. These make the local map render through the new fog shader instead of the old fixed-function behavior.</p>
+      </div>
+
+      <div class="finding medium">
+        <h3>3. Shader include path edits in <code>bs/*.frag</code> are suspicious</h3>
+        <p><span class="path">files/shaders/compatibility/bs/default.frag</span> and <span class="path">files/shaders/compatibility/bs/nolighting.frag</span></p>
+        <p>The fog commit changed includes like <code>#include "compatibility/vertexcolors.glsl"</code> to <code>#include "vertexcolors.glsl"</code> from files inside <code>compatibility/bs/</code>. If the shader preprocessor resolves includes relative to the including file, this can fail or pick the wrong file. It is less directly tied to the black map symptom than the local-map fog uniform gap, but worth verifying in the shader log.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Suggested Fix Order</h2>
+      <ol>
+        <li><strong>Crash stopgap:</strong> guard <code>Creature::hit</code> before <code>getHitChance</code>, and make <code>getHitChance</code> reject empty/non-actor attacker or victim.</li>
+        <li><strong>Projectile stopgap:</strong> put projectile Lua <code>onHit</code> back inside <code>validVictim</code>, and repair the staged <code>target.getClass()</code> guard.</li>
+        <li><strong>Map fix:</strong> update <code>LocalMapRenderToTexture::setDefaults</code> to override all new fog uniforms for the RTT camera, or provide a shader define/pass flag that disables fog for map/preview RTTs.</li>
+        <li><strong>Validation:</strong> add regression tests for <code>Creature::hit</code> with empty victim, <code>projectileHit</code> with empty victim, and local map RTT state containing the new fog uniforms.</li>
+        <li><strong>Cleanup:</strong> reconcile stamina shield tests with implementation, then run formatting/whitespace checks.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Implementation Appendix</h2>
+      <div class="finding high">
+        <h3>Crash fixes applied</h3>
+        <ul>
+          <li><code>Creature::hit</code> and <code>Npc::hit</code> now reject empty/non-actor victims before hit chance, stats, reach, Lua, or damage logic.</li>
+          <li><code>getHitChance</code>, elemental shields, hand-to-hand damage, block checks, melee reach helpers, normal-weapon resistance, and werewolf damage now reject invalid pointers before dereferencing actor/weapon data.</li>
+          <li><code>projectileHit</code> now keeps ranged Lua <code>Hit</code> events inside the valid actor-victim path, skips projectile inventory recovery for empty projectiles, and uses explicit valid-attacker/valid-victim booleans.</li>
+          <li><code>ProjectileManager</code> now guards empty targets before <code>target.getClass()</code>, guards active magic bolts before <code>caster.getCell()</code>, relaxes debug assertions for empty saved/restored casters, and rejects empty magic-bolt casters at launch.</li>
+          <li><code>CastSpell</code> now avoids launching bolts or playing cast effects with an empty caster.</li>
+        </ul>
+      </div>
+      <div class="finding high">
+        <h3>Map fog fix applied</h3>
+        <p><code>LocalMapRenderToTexture</code> and <code>CharacterPreview</code> now install explicit override uniforms for the new fog shader contract: <code>near</code>, <code>far</code>, <code>skyBlendingStart</code>, <code>screenRes</code>, <code>exponentialFogDensity</code>, height fog fields, <code>cameraPos</code>, <code>invViewMatrix</code>, <code>fogStart</code>, <code>fogEnd</code>, and <code>fogColor</code>. The RTT passes still disable legacy <code>osg::Fog</code>, but no longer rely on that alone.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Verification Notes</h2>
+      <ul>
+        <li>No existing build directory, <code>CMakeCache.txt</code>, <code>cmake</code>, or <code>clang-format</code> was available in this environment, so I did not run the OpenMW test suite or formatter.</li>
+        <li><code>git diff --check</code> is clean for the files changed by the implementation pass.</li>
+        <li>The working tree still contains unrelated user changes and staged pre-existing edits, including <code>spellutil.cpp</code> and documentation/test line-ending churn. Those were not reverted.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Short Repro Probes</h2>
+      <div class="note">
+        <strong>Crash probe:</strong> test a non-humanoid creature attack where the target steps out of reach during wind-up. The expected crash site is <code>Creature::hit -> getHitChance -> victim.getClass()</code>.
+      </div>
+      <div class="note">
+        <strong>Projectile probe:</strong> make an NPC archer or thrown-weapon actor miss and hit terrain. The expected crash site is <code>projectileHit -> LuaManager::onHit -> sendLocalEvent(empty victim)</code>.
+      </div>
+      <div class="note">
+        <strong>Map probe:</strong> temporarily disable <code>exponential fog</code>, <code>height fog</code>, and <code>sky blending</code>. If new map updates stop turning black, the local map fog-uniform diagnosis is confirmed.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,112 +1,133 @@
-OpenMW
-======
+Morraiwind
+==========
 
-OpenMW is an open-source open-world RPG game engine that supports playing Morrowind by Bethesda Softworks. You need to own the game for OpenMW to play Morrowind.
+Morraiwind is a personal gameplay and rendering fork of
+[OpenMW](https://www.openmw.org), the open-source engine for playing
+Morrowind by Bethesda Softworks.
 
-OpenMW also comes with OpenMW-CS, a replacement for Bethesda's Construction Set.
+You still need to own Morrowind. This repository contains engine changes only;
+it does not include Bethesda game data.
 
-* Version: 0.51.0
-* License: GPLv3 (see [LICENSE](https://gitlab.com/OpenMW/openmw/-/raw/master/LICENSE) for more information)
-* Website: https://www.openmw.org
-* IRC: #openmw on irc.libera.chat
-* Discord: https://discord.gg/bWuqq2e
+V1 Focus
+--------
 
+This fork aims to make Morrowind feel wider, sharper, and more physical while
+keeping the OpenMW foundation intact.
 
-Font Licenses:
-* DejaVuLGCSansMono.ttf: custom (see [files/data/fonts/DejaVuFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/DejaVuFontLicense.txt) for more information)
-* DemonicLetters.ttf: SIL Open Font License (see [files/data/fonts/DemonicLettersFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/DemonicLettersFontLicense.txt) for more information)
-* MysticCards.ttf: SIL Open Font License (see [files/data/fonts/MysticCardsFontLicense.txt](https://gitlab.com/OpenMW/openmw/-/raw/master/files/data/fonts/MysticCardsFontLicense.txt) for more information)
+### Graphics and World Rendering
 
-Current Status
---------------
+* Much higher default viewing distance.
+* Distant terrain enabled by default.
+* Reworked fog defaults for long-distance play.
+* Radial, exponential, and height fog enabled for a softer horizon.
+* Distant land fog tuned for large exterior views.
+* Sky blending and camera-uniform sync improvements to reduce fog lag.
+* Higher shadow quality defaults, including longer shadow distance and more
+  cascades.
 
-The main quests in Morrowind, Tribunal and Bloodmoon are all completable. Some issues with side quests are to be expected (but rare). Check the [bug tracker](https://gitlab.com/OpenMW/openmw/-/issues/?milestone_title=openmw-1.0) for a list of issues we need to resolve before the "1.0" release. Even before the "1.0" release, however, OpenMW boasts some new [features](https://wiki.openmw.org/index.php?title=Features), such as improved graphics and user interfaces.
+### Combat Rework
 
-Pre-existing modifications created for the original Morrowind engine can be hit-and-miss. The OpenMW script compiler performs more thorough error-checking than Morrowind does, meaning that a mod created for Morrowind may not necessarily run in OpenMW. Some mods also rely on quirky behaviour or engine bugs in order to work. We are considering such compatibility issues on a case-by-case basis - in some cases adding a workaround to OpenMW may be feasible, in other cases fixing the mod will be the only option. If you know of any mods that work or don't work, feel free to add them to the [Mod status](https://wiki.openmw.org/index.php?title=Mod_status) wiki page.
+* Physical contact matters more: hits that connect can deal damage instead of
+  being discarded by a pure dice-roll miss.
+* Old hit chance is reused as damage scaling, so skill still matters.
+* Combat damage scaling can be toggled in settings.
+* Floating damage feedback is available.
+* Fatigue is much more important:
+  * attacks cost more stamina,
+  * fatigue regeneration is delayed by damage instead of every action,
+  * player, NPC, and creature regeneration can be tuned separately,
+  * physical damage is absorbed by fatigue first through a stamina-shield
+    model.
+* Creature/NPC balance knobs were added for more dangerous fights.
+* Balance settings are exposed in the in-game settings UI.
 
-Getting Started
+### V1 Stability Fixes
+
+The current V1 patch fixes the two major blockers found during testing:
+
+* Local map exploration updates no longer render newly updated regions black.
+  The map and character-preview render-to-texture passes now override the full
+  new fog shader uniform set instead of relying on legacy fog state.
+* NPC/creature encounter crashes from attacks and projectiles are guarded more
+  robustly. Empty or non-actor targets no longer flow into hit chance, Lua hit
+  events, caster cell lookups, or projectile recovery logic.
+
+See [morraiwind_bug_review_report.html](morraiwind_bug_review_report.html) for
+the detailed investigation and implementation notes.
+
+Build On Windows
+----------------
+
+This checkout is set up for Visual Studio 2022, CMake, and Ninja.
+
+From PowerShell or Command Prompt:
+
+```powershell
+cd D:\data\code\openmw
+.\releasecompile.bat
+```
+
+For a quicker development build:
+
+```powershell
+.\fastcompile.bat
+```
+
+If the build environment needs to be restored:
+
+```powershell
+.\restore_env.bat
+```
+
+Run The Game
+------------
+
+Release build:
+
+```powershell
+.\MSVC2022_64_Ninja\Release\openmw-launcher.exe
+```
+
+Or run the engine directly:
+
+```powershell
+.\MSVC2022_64_Ninja\Release\openmw.exe
+```
+
+Debug build, useful for crash investigation but much slower:
+
+```powershell
+.\MSVC2022_64_Ninja\Debug\openmw.exe
+```
+
+If OpenMW needs to locate or import the Morrowind game files again:
+
+```powershell
+.\MSVC2022_64_Ninja\Release\openmw-wizard.exe
+```
+
+Upstream OpenMW
 ---------------
 
-* [Official forums](https://forum.openmw.org/)
-* [Installation instructions](https://openmw.readthedocs.io/en/latest/manuals/installation/index.html)
-* [Build from source](https://wiki.openmw.org/index.php?title=Development_Environment_Setup)
-* [Testing the game](https://wiki.openmw.org/index.php?title=Testing)
-* [How to contribute](https://wiki.openmw.org/index.php?title=Contribution_Wanted)
-* [Report a bug](https://gitlab.com/OpenMW/openmw/issues) - read the [guidelines](https://wiki.openmw.org/index.php?title=Bug_Reporting_Guidelines) before submitting your first bug!
-* [Known issues](https://gitlab.com/OpenMW/openmw/issues?label_name%5B%5D=Bug)
+Morraiwind is based on OpenMW 0.51.0-era development sources.
 
-The data path
+OpenMW is an open-source open-world RPG engine that supports Morrowind,
+Tribunal, and Bloodmoon. It also includes OpenMW-CS, a replacement for
+Bethesda's Construction Set.
+
+Useful upstream links:
+
+* Website: https://www.openmw.org
+* Source: https://gitlab.com/OpenMW/openmw
+* Documentation: https://openmw.readthedocs.io/
+* License: GPLv3, see [LICENSE](LICENSE)
+
+Font Licenses
 -------------
 
-The data path tells OpenMW where to find your Morrowind files. If you run the launcher, OpenMW should be able to pick up the location of these files on its own, if both Morrowind and OpenMW are installed properly (installing Morrowind under WINE is considered a proper install).
-
-Command line options
---------------------
-
-    Syntax: openmw <options>
-    Allowed options:
-      --config arg                          additional config directories
-      --replace arg                         settings where the values from the
-                                            current source should replace those
-                                            from lower-priority sources instead of
-                                            being appended
-      --user-data arg                       set user data directory (used for
-                                            saves, screenshots, etc)
-      --resources arg (=resources)          set resources directory
-      --help                                print help message
-      --version                             print version information and quit
-      --data arg (=data)                    set data directories (later directories
-                                            have higher priority)
-      --data-local arg                      set local data directory (highest
-                                            priority)
-      --fallback-archive arg (=fallback-archive)
-                                            set fallback BSA archives (later
-                                            archives have higher priority)
-      --start arg                           set initial cell
-      --content arg                         content file(s): esm/esp, or
-                                            omwgame/omwaddon/omwscripts
-      --groundcover arg                     groundcover content file(s): esm/esp,
-                                            or omwgame/omwaddon
-      --no-sound [=arg(=1)] (=0)            disable all sounds
-      --script-all [=arg(=1)] (=0)          compile all scripts (excluding dialogue
-                                            scripts) at startup
-      --script-all-dialogue [=arg(=1)] (=0) compile all dialogue scripts at startup
-      --script-console [=arg(=1)] (=0)      enable console-only script
-                                            functionality
-      --script-run arg                      select a file containing a list of
-                                            console commands that is executed on
-                                            startup
-      --script-warn [=arg(=1)] (=1)         handling of warnings when compiling
-                                            scripts
-                                            0 - ignore warnings
-                                            1 - show warnings but consider script as
-                                            correctly compiled anyway
-                                            2 - treat warnings as errors
-      --load-savegame arg                   load a save game file on game startup
-                                            (specify an absolute filename or a
-                                            filename relative to the current
-                                            working directory)
-      --skip-menu [=arg(=1)] (=0)           skip main menu on game startup
-      --new-game [=arg(=1)] (=0)            run new game sequence (ignored if
-                                            skip-menu=0)
-      --encoding arg (=win1252)             Character encoding used in OpenMW game
-                                            messages:
-
-                                            win1250 - Central and Eastern European
-                                            such as Polish, Czech, Slovak,
-                                            Hungarian, Slovene, Bosnian, Croatian,
-                                            Serbian (Latin script), Romanian and
-                                            Albanian languages
-
-                                            win1251 - Cyrillic alphabet such as
-                                            Russian, Bulgarian, Serbian Cyrillic
-                                            and other languages
-
-                                            win1252 - Western European (Latin)
-                                            alphabet, used by default
-      --fallback arg                        fallback values
-      --no-grab [=arg(=1)] (=0)             Don't grab mouse cursor
-      --export-fonts [=arg(=1)] (=0)        Export Morrowind .fnt fonts to PNG
-                                            image and XML file in current directory
-      --activate-dist arg (=-1)             activation distance override
-      --random-seed arg (=<impl defined>)   seed value for random number generator
+* DejaVuLGCSansMono.ttf: custom, see
+  [files/data/fonts/DejaVuFontLicense.txt](files/data/fonts/DejaVuFontLicense.txt)
+* DemonicLetters.ttf: SIL Open Font License, see
+  [files/data/fonts/DemonicLettersFontLicense.txt](files/data/fonts/DemonicLettersFontLicense.txt)
+* MysticCards.ttf: SIL Open Font License, see
+  [files/data/fonts/MysticCardsFontLicense.txt](files/data/fonts/MysticCardsFontLicense.txt)

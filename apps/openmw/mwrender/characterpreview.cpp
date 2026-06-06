@@ -8,9 +8,12 @@
 #include <osg/LightModel>
 #include <osg/LightSource>
 #include <osg/Material>
+#include <osg/Matrixf>
 #include <osg/PositionAttitudeTransform>
+#include <osg/StateSet>
 #include <osg/TexEnvCombine>
 #include <osg/Texture2D>
+#include <osg/Uniform>
 #include <osg/ValueObject>
 #include <osgUtil/IntersectionVisitor>
 #include <osgUtil/LineSegmentIntersector>
@@ -36,6 +39,37 @@
 #include "npcanimation.hpp"
 #include "util.hpp"
 #include "vismask.hpp"
+
+namespace
+{
+    void disableFogForOffscreenPass(osg::StateSet& stateset)
+    {
+        constexpr float disabledFogDistance = 10000000.f;
+        const auto overrideOn = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+
+        osg::ref_ptr<osg::Fog> fog(new osg::Fog);
+        fog->setStart(disabledFogDistance);
+        fog->setEnd(disabledFogDistance);
+        stateset.setAttributeAndModes(fog, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+
+        stateset.addUniform(new osg::Uniform("near", 0.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("far", disabledFogDistance), overrideOn);
+        stateset.addUniform(new osg::Uniform("skyBlendingStart", disabledFogDistance), overrideOn);
+        stateset.addUniform(new osg::Uniform("screenRes", osg::Vec2f{ 1.f, 1.f }), overrideOn);
+
+        stateset.addUniform(new osg::Uniform("exponentialFogDensity", 0.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("heightFogEnabled", false), overrideOn);
+        stateset.addUniform(new osg::Uniform("heightFogDensity", 0.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("heightFogFalloff", 0.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("heightFogOffset", 0.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("cameraPos", osg::Vec3f{}), overrideOn);
+        stateset.addUniform(new osg::Uniform("invViewMatrix", osg::Matrixf::identity()), overrideOn);
+
+        stateset.addUniform(new osg::Uniform("fogStart", disabledFogDistance), overrideOn);
+        stateset.addUniform(new osg::Uniform("fogEnd", disabledFogDistance + 1.f), overrideOn);
+        stateset.addUniform(new osg::Uniform("fogColor", osg::Vec4f(0.f, 0.f, 0.f, 0.f)), overrideOn);
+    }
+}
 
 namespace MWRender
 {
@@ -249,18 +283,7 @@ namespace MWRender
 
         SceneUtil::ShadowManager::instance().disableShadowsForStateSet(*stateset);
 
-        // assign large value to effectively turn off fog
-        // shaders don't respect glDisable(GL_FOG)
-        osg::ref_ptr<osg::Fog> fog(new osg::Fog);
-        fog->setStart(10000000);
-        fog->setEnd(10000000);
-        stateset->setAttributeAndModes(fog, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-
-        // TODO: Clean up this mess of loose uniforms that shaders depend on.
-        // turn off sky blending
-        stateset->addUniform(new osg::Uniform("far", 10000000.0f));
-        stateset->addUniform(new osg::Uniform("skyBlendingStart", 8000000.0f));
-        stateset->addUniform(new osg::Uniform("screenRes", osg::Vec2f{ 1, 1 }));
+        disableFogForOffscreenPass(*stateset);
 
         stateset->addUniform(new osg::Uniform("emissiveMult", 1.f));
 

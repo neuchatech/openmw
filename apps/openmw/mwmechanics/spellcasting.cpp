@@ -126,6 +126,9 @@ namespace MWMechanics
 
     void CastSpell::launchMagicBolt() const
     {
+        if (mCaster.isEmpty())
+            return;
+
         osg::Vec3f fallbackDirection(0, 1, 0);
         osg::Vec3f offset(0, 0, 0);
         if (!mTarget.isEmpty() && mTarget.getClass().isActor())
@@ -301,7 +304,7 @@ namespace MWMechanics
         int type = enchantment->mData.mType;
 
         // Check if there's enough charge left
-        if (!godmode
+        if (!mCaster.isEmpty() && !godmode
             && (type == ESM::Enchantment::WhenUsed || (!isProjectile && type == ESM::Enchantment::WhenStrikes)))
         {
             int castCost = getEffectiveEnchantmentCastCost(*enchantment, mCaster);
@@ -337,7 +340,7 @@ namespace MWMechanics
 
         if (type == ESM::Enchantment::WhenUsed)
         {
-            if (mCaster == getPlayer())
+            if (!mCaster.isEmpty() && mCaster == getPlayer())
                 mCaster.getClass().skillUsageSucceeded(mCaster, ESM::Skill::Enchant, ESM::Skill::Enchant_UseMagicItem);
         }
         else if (type == ESM::Enchantment::CastOnce)
@@ -347,7 +350,7 @@ namespace MWMechanics
         }
         else if (type == ESM::Enchantment::WhenStrikes)
         {
-            if (mCaster == getPlayer())
+            if (!mCaster.isEmpty() && mCaster == getPlayer())
                 mCaster.getClass().skillUsageSucceeded(mCaster, ESM::Skill::Enchant, ESM::Skill::Enchant_CastOnStrike);
         }
 
@@ -391,7 +394,7 @@ namespace MWMechanics
 
         bool godmode = mCaster == MWMechanics::getPlayer() && MWBase::Environment::get().getWorld()->getGodModeState();
 
-        if (mCaster.getClass().isActor() && !mAlwaysSucceed && !mScriptedSpell)
+        if (!mCaster.isEmpty() && mCaster.getClass().isActor() && !mAlwaysSucceed && !mScriptedSpell)
         {
             school = getSpellSchool(spell, mCaster);
 
@@ -430,7 +433,7 @@ namespace MWMechanics
             mCaster.getClass().skillUsageSucceeded(mCaster, school, ESM::Skill::Spellcast_Success);
 
         // A non-actor doesn't play its spell cast effects from a character controller, so play them here
-        if (!mCaster.getClass().isActor())
+        if (!mCaster.isEmpty() && !mCaster.getClass().isActor())
             playSpellCastingEffects(spell->mEffects.mList);
 
         inflict(mCaster, spell->mEffects, ESM::RT_Self);
@@ -485,6 +488,9 @@ namespace MWMechanics
 
     void CastSpell::playSpellCastingEffects(const std::vector<ESM::IndexedENAMstruct>& effects) const
     {
+        if (mCaster.isEmpty())
+            return;
+
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
         std::vector<VFS::Path::Normalized> addedEffects;
 

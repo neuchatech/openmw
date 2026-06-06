@@ -266,8 +266,13 @@ namespace MWWorld
     void ProjectileManager::launchMagicBolt(
         const ESM::RefId& spellId, const Ptr& caster, const osg::Vec3f& fallbackDirection, ESM::RefNum item)
     {
+        if (caster.isEmpty())
+            return;
+
+        const bool casterIsActor = caster.getClass().isActor();
+
         osg::Vec3f pos = caster.getRefData().getPosition().asVec3();
-        if (caster.getClass().isActor())
+        if (casterIsActor)
         {
             // Note: we ignore the collision box offset, this is required to make some flying creatures work as
             // intended.
@@ -275,11 +280,11 @@ namespace MWWorld
         }
 
         // Actors can't cast target spells underwater
-        if (caster.getClass().isActor() && MWBase::Environment::get().getWorld()->isUnderwater(caster.getCell(), pos))
+        if (casterIsActor && caster.isInCell() && MWBase::Environment::get().getWorld()->isUnderwater(caster.getCell(), pos))
             return;
 
         osg::Quat orient;
-        if (caster.getClass().isActor())
+        if (casterIsActor)
             orient = osg::Quat(caster.getRefData().getPosition().rot[0], osg::Vec3f(-1, 0, 0))
                 * osg::Quat(caster.getRefData().getPosition().rot[2], osg::Vec3f(0, 0, -1));
         else
@@ -289,7 +294,7 @@ namespace MWWorld
         state.mSpellId = spellId;
         state.mCasterHandle = caster;
         state.mItem = item;
-        if (caster.getClass().isActor())
+        if (casterIsActor)
             state.mActorId = caster.getClass().getCreatureStats(caster).getActorId();
         else
             state.mActorId = -1;
@@ -303,7 +308,7 @@ namespace MWWorld
         if (state.mEffects.mList.empty())
             return;
 
-        if (!caster.getClass().isActor() && fallbackDirection.length2() <= 0)
+        if (!casterIsActor && fallbackDirection.length2() <= 0)
         {
             Log(Debug::Warning) << "Unable to launch magic bolt (direction to target is empty)";
             return;
@@ -531,15 +536,15 @@ namespace MWWorld
 
             const auto target = projectile->getTarget();
             auto caster = projectileState.getCaster();
-            assert(target != caster);
+            assert(target.isEmpty() || caster.isEmpty() || target != caster);
 
-            if (caster.isEmpty())
+            if (caster.isEmpty() && !target.isEmpty() && target.getClass().isActor())
                 caster = target;
 
             // Try to get a Ptr to the bow that was used. It might no longer exist.
             MWWorld::ManualRef projectileRef(*MWBase::Environment::get().getESMStore(), projectileState.mIdArrow);
             MWWorld::Ptr bow = projectileRef.getPtr();
-            if (!caster.isEmpty() && projectileState.mIdArrow != projectileState.mBowId)
+            if (!caster.isEmpty() && caster.getClass().isActor() && projectileState.mIdArrow != projectileState.mBowId)
             {
                 MWWorld::InventoryStore& inv = caster.getClass().getInventoryStore(caster);
                 MWWorld::ContainerStoreIterator invIt = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
@@ -573,12 +578,15 @@ namespace MWWorld
 
             const MWBase::World& world = *MWBase::Environment::get().getWorld();
             const bool active = projectile->isActive();
-            if (active && !world.isUnderwater(caster.getCell(), pos))
-                continue;
+            if (active)
+            {
+                if (caster.isEmpty() || !caster.isInCell() || !world.isUnderwater(caster.getCell(), pos))
+                    continue;
+            }
 
             const Ptr target = !active ? projectile->getTarget() : Ptr();
 
-            assert(target != caster);
+            assert(target.isEmpty() || caster.isEmpty() || target != caster);
 
             MWMechanics::CastSpell cast(caster, target);
             cast.mHitPosition = !active ? Misc::Convert::makeOsgVec3f(projectile->getHitPosition()) : pos;

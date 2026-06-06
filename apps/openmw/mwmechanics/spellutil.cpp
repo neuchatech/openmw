@@ -99,7 +99,10 @@ namespace MWMechanics
          * Each point of enchant skill above/under 10 subtracts/adds
          * one percent of enchantment cost while minimum is 1.
          */
-        float eSkill = actor.getClass().getSkill(actor, ESM::Skill::Enchant);
+        float eSkill = 0;
+        if (!actor.isEmpty() && actor.getClass().isActor())
+            eSkill = actor.getClass().getSkill(actor, ESM::Skill::Enchant);
+
         const float result = castCost - (castCost / 100) * (eSkill - 10);
 
         return static_cast<int>((result < 1) ? 1 : result);
@@ -177,12 +180,17 @@ namespace MWMechanics
 
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
         const auto magicEffect = store.get<ESM::MagicEffect>().find(effect.mEffectID);
-        const MWMechanics::CreatureStats& creatureStats = caster.getClass().getCreatureStats(caster);
 
-        float x = (caster.getClass().getSkill(caster, ESM::Skill::Alchemy)
-                      + 0.2f * creatureStats.getAttribute(ESM::Attribute::Intelligence).getModified()
-                      + 0.1f * creatureStats.getAttribute(ESM::Attribute::Luck).getModified())
-            * creatureStats.getFatigueTerm();
+        float x = 0;
+        if (!caster.isEmpty() && caster.getClass().isActor())
+        {
+            const MWMechanics::CreatureStats& creatureStats = caster.getClass().getCreatureStats(caster);
+
+            x = (caster.getClass().getSkill(caster, ESM::Skill::Alchemy)
+                    + 0.2f * creatureStats.getAttribute(ESM::Attribute::Intelligence).getModified()
+                    + 0.1f * creatureStats.getAttribute(ESM::Attribute::Luck).getModified())
+                * creatureStats.getFatigueTerm();
+        }
 
         auto& prng = MWBase::Environment::get().getWorld()->getPrng();
         int roll = Misc::Rng::roll0to99(prng);
@@ -219,6 +227,9 @@ namespace MWMechanics
 
     float calcSpellBaseSuccessChance(const ESM::Spell* spell, const MWWorld::Ptr& actor, ESM::RefId* effectiveSchool)
     {
+        if (actor.isEmpty() || !actor.getClass().isActor())
+            return 0;
+
         // Morrowind for some reason uses a formula slightly different from magicka cost calculation
         float y = std::numeric_limits<float>::max();
         float lowestSkill = 0;
@@ -267,6 +278,9 @@ namespace MWMechanics
     float getSpellSuccessChance(
         const ESM::Spell* spell, const MWWorld::Ptr& actor, ESM::RefId* effectiveSchool, bool cap, bool checkMagicka)
     {
+        if (actor.isEmpty() || !actor.getClass().isActor())
+            return 100.f;
+
         // NB: Base chance is calculated here because the effective school pointer must be filled
         float baseChance = calcSpellBaseSuccessChance(spell, actor, effectiveSchool);
 

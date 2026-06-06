@@ -75,6 +75,9 @@ namespace MWMechanics
     bool blockMeleeAttack(const MWWorld::Ptr& attacker, const MWWorld::Ptr& blocker, const MWWorld::Ptr& weapon,
         float damage, float attackStrength)
     {
+        if (attacker.isEmpty() || blocker.isEmpty() || !attacker.getClass().isActor() || !blocker.getClass().isActor())
+            return false;
+
         if (!blocker.getClass().hasInventoryStore(blocker))
             return false;
 
@@ -127,7 +130,7 @@ namespace MWMechanics
         blockerTerm *= blockerStats.getFatigueTerm();
 
         float attackerSkill = 0;
-        if (weapon.isEmpty())
+        if (weapon.isEmpty() || weapon.getType() != ESM::Weapon::sRecordId)
             attackerSkill = attacker.getClass().getSkill(attacker, ESM::Skill::HandToHand);
         else
             attackerSkill = attacker.getClass().getSkill(attacker, weapon.getClass().getEquipmentSkill(weapon));
@@ -166,7 +169,7 @@ namespace MWMechanics
             float normalizedEncumbrance = blocker.getClass().getNormalizedEncumbrance(blocker);
             normalizedEncumbrance = std::min(1.f, normalizedEncumbrance);
             float fatigueLoss = fFatigueBlockBase + normalizedEncumbrance * fFatigueBlockMult;
-            if (!weapon.isEmpty())
+            if (!weapon.isEmpty() && weapon.getType() == ESM::Weapon::sRecordId)
                 fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueBlockMult;
             fatigue.setCurrent(fatigue.getCurrent() - fatigueLoss);
             blockerStats.setFatigue(fatigue);
@@ -183,7 +186,7 @@ namespace MWMechanics
 
     bool isNormalWeapon(const MWWorld::Ptr& weapon)
     {
-        if (weapon.isEmpty())
+        if (weapon.isEmpty() || weapon.getType() != ESM::Weapon::sRecordId)
             return false;
 
         const int flags = weapon.get<ESM::Weapon>()->mBase->mData.mFlags;
@@ -197,6 +200,9 @@ namespace MWMechanics
     void resistNormalWeapon(
         const MWWorld::Ptr& actor, const MWWorld::Ptr& attacker, const MWWorld::Ptr& weapon, float& damage)
     {
+        if (actor.isEmpty() || !actor.getClass().isActor())
+            return;
+
         if (weapon.isEmpty() || !isNormalWeapon(weapon))
             return;
 
@@ -212,7 +218,8 @@ namespace MWMechanics
 
     void applyWerewolfDamageMult(const MWWorld::Ptr& actor, const MWWorld::Ptr& weapon, float& damage)
     {
-        if (damage == 0 || weapon.isEmpty() || !actor.getClass().isNpc())
+        if (damage == 0 || actor.isEmpty() || weapon.isEmpty() || weapon.getType() != ESM::Weapon::sRecordId
+            || !actor.getClass().isNpc())
             return;
 
         const int flags = weapon.get<ESM::Weapon>()->mBase->mData.mFlags;
@@ -231,22 +238,27 @@ namespace MWMechanics
         MWBase::World* world = MWBase::Environment::get().getWorld();
         const MWWorld::Store<ESM::GameSetting>& gmst = world->getStore().get<ESM::GameSetting>();
 
-        bool validVictim = !victim.isEmpty() && victim.getClass().isActor();
+        const bool validAttacker = !attacker.isEmpty() && attacker.getClass().isActor();
+        const bool validVictim = !victim.isEmpty() && victim.getClass().isActor();
 
         ESM::RefId weaponSkill = ESM::Skill::Marksman;
-        if (!weapon.isEmpty())
+        if (!weapon.isEmpty() && weapon.getType() == ESM::Weapon::sRecordId)
             weaponSkill = weapon.getClass().getEquipmentSkill(weapon);
 
         float damage = 0.f;
         float hitchance = 100.0f;
         if (validVictim)
         {
-            if (attacker == getPlayer())
+            if (validAttacker && attacker == getPlayer())
                 MWBase::Environment::get().getWindowManager()->setEnemy(victim);
 
-            int skillValue = static_cast<int>(attacker.getClass().getSkill(attacker, weaponSkill));
+            int skillValue = 0;
+            if (validAttacker)
+            {
+                skillValue = static_cast<int>(attacker.getClass().getSkill(attacker, weaponSkill));
+                hitchance = getHitChance(attacker, victim, skillValue);
+            }
             // Sprint 7: Guaranteed Hits - Ranged always hits if physical contact is made.
-            hitchance = getHitChance(attacker, victim, skillValue);
 
             {
                 // Bow/crossbow damage
@@ -282,10 +294,12 @@ namespace MWMechanics
                 damage *= (1.0f - DAMAGE_SCALING_INTENSITY) + (scalingRoll * DAMAGE_SCALING_INTENSITY);
             }
 
-            adjustWeaponDamage(damage, weapon, attacker);
+            if (validAttacker)
+                adjustWeaponDamage(damage, weapon, attacker);
         }
 
-        reduceWeaponCondition(damage, validVictim, weapon, attacker);
+        if (validAttacker)
+            reduceWeaponCondition(damage, validVictim, weapon, attacker);
 
         if (validVictim)
         {
@@ -294,11 +308,11 @@ namespace MWMechanics
                 resistNormalWeapon(victim, attacker, projectile, damage);
             applyWerewolfDamageMult(victim, projectile, damage);
 
-            if (attacker == getPlayer())
+            if (validAttacker && attacker == getPlayer())
                 attacker.getClass().skillUsageSucceeded(attacker, weaponSkill, ESM::Skill::Weapon_SuccessfulHit);
 
             const MWMechanics::AiSequence& sequence = victim.getClass().getCreatureStats(victim).getAiSequence();
-            bool unaware = attacker == getPlayer() && !sequence.isInCombat()
+            bool unaware = validAttacker && attacker == getPlayer() && !sequence.isInCombat()
                 && !MWBase::Environment::get().getMechanicsManager()->awarenessCheck(attacker, victim);
             bool knockedDown = victim.getClass().getCreatureStats(victim).getKnockedDown();
             if (knockedDown || unaware)
@@ -314,30 +328,33 @@ namespace MWMechanics
         // Apply "On hit" effect of the projectile
         // Sprint 7: Restrict enchantment trigger to the original hit chance probability to maintain balance.
         bool appliedEnchantment = false;
-        if (Misc::Rng::roll0to99(world->getPrng()) < hitchance)
+        if (validVictim && Misc::Rng::roll0to99(world->getPrng()) < hitchance)
             appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
 
         if (validVictim)
         {
             // Non-enchanted arrows shot at enemies have a chance to turn up in their inventory
-            if (victim != getPlayer() && !appliedEnchantment)
+            if (victim != getPlayer() && !projectile.isEmpty() && !appliedEnchantment)
             {
                 static const float fProjectileThrownStoreChance
                     = gmst.find("fProjectileThrownStoreChance")->mValue.getFloat();
                 if (Misc::Rng::rollProbability(world->getPrng()) < fProjectileThrownStoreChance / 100.f)
                     victim.getClass().getContainerStore(victim).add(projectile, 1);
             }
+
+            MWBase::Environment::get().getLuaManager()->onHit(attacker, victim, weapon, projectile, 0,
+                attackStrength, damage, true, hitPosition, true, MWMechanics::DamageSourceType::Ranged);
         }
 
-        MWBase::Environment::get().getLuaManager()->onHit(attacker, victim, weapon, projectile, 0,
-            attackStrength, damage, true, hitPosition, true, MWMechanics::DamageSourceType::Ranged);
-
-        if (attacker == getPlayer() && damage > 0)
+        if (validAttacker && attacker == getPlayer() && damage > 0)
             MWBase::Environment::get().getWindowManager()->showDamage(damage);
     }
 
     float getHitChance(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, int skillValue)
     {
+        if (attacker.isEmpty() || victim.isEmpty() || !attacker.getClass().isActor() || !victim.getClass().isActor())
+            return 100.0f;
+
         MWMechanics::CreatureStats& stats = attacker.getClass().getCreatureStats(attacker);
         const MWMechanics::MagicEffects& mageffects = stats.getMagicEffects();
 
@@ -374,6 +391,9 @@ namespace MWMechanics
 
     void applyElementalShields(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim)
     {
+        if (attacker.isEmpty() || victim.isEmpty() || !attacker.getClass().isActor() || !victim.getClass().isActor())
+            return;
+
         // Don't let elemental shields harm the player in god mode.
         bool godmode = attacker == getPlayer() && MWBase::Environment::get().getWorld()->getGodModeState();
         if (godmode)
@@ -434,7 +454,7 @@ namespace MWMechanics
 
     void reduceWeaponCondition(float damage, bool hit, MWWorld::Ptr& weapon, const MWWorld::Ptr& attacker)
     {
-        if (weapon.isEmpty())
+        if (weapon.isEmpty() || attacker.isEmpty() || !attacker.getClass().isActor())
             return;
 
         if (!hit)
@@ -470,7 +490,7 @@ namespace MWMechanics
 
     void adjustWeaponDamage(float& damage, const MWWorld::Ptr& weapon, const MWWorld::Ptr& attacker)
     {
-        if (weapon.isEmpty())
+        if (weapon.isEmpty() || attacker.isEmpty() || !attacker.getClass().isActor())
             return;
 
         const bool weaphashealth = weapon.getClass().hasItemHealth(weapon);
@@ -497,6 +517,13 @@ namespace MWMechanics
     void getHandToHandDamage(
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, float& damage, bool& healthdmg, float attackStrength)
     {
+        if (attacker.isEmpty() || victim.isEmpty() || !attacker.getClass().isActor() || !victim.getClass().isActor())
+        {
+            damage = 0;
+            healthdmg = false;
+            return;
+        }
+
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
         static const float minstrike = store.get<ESM::GameSetting>().find("fMinHandToHandMult")->mValue.getFloat();
         static const float maxstrike = store.get<ESM::GameSetting>().find("fMaxHandToHandMult")->mValue.getFloat();
@@ -550,6 +577,9 @@ namespace MWMechanics
 
     void applyFatigueLoss(const MWWorld::Ptr& attacker, const MWWorld::Ptr& weapon, float attackStrength)
     {
+        if (attacker.isEmpty() || !attacker.getClass().isActor())
+            return;
+
         // somewhat of a guess, but using the weapon weight makes sense
         const MWWorld::Store<ESM::GameSetting>& store
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
@@ -567,17 +597,19 @@ namespace MWMechanics
             float fatigueLoss = fFatigueAttackBase + normalizedEncumbrance * fFatigueAttackMult;
             if (!weapon.isEmpty())
                 fatigueLoss += weapon.getClass().getWeight(weapon) * attackStrength * fWeaponFatigueMult;
-            
+
             // Sprint 6: Restore High Costs (5x) for everyone
             fatigueLoss *= 5.0f;
 
             stats.reduceFatigue(fatigueLoss, false);
         }
-
     }
 
     float getFightDistanceBias(const MWWorld::Ptr& actor1, const MWWorld::Ptr& actor2)
     {
+        if (actor1.isEmpty() || actor2.isEmpty())
+            return 0.f;
+
         osg::Vec3f pos1(actor1.getRefData().getPosition().asVec3());
         osg::Vec3f pos2(actor2.getRefData().getPosition().asVec3());
 
@@ -606,6 +638,9 @@ namespace MWMechanics
 
     float getDistanceToBounds(const MWWorld::Ptr& actor, const MWWorld::Ptr& target)
     {
+        if (actor.isEmpty() || target.isEmpty())
+            return std::numeric_limits<float>::max();
+
         osg::Vec3f actorPos(actor.getRefData().getPosition().asVec3());
         osg::Vec3f targetPos(target.getRefData().getPosition().asVec3());
         MWBase::World* world = MWBase::Environment::get().getWorld();
@@ -621,21 +656,27 @@ namespace MWMechanics
         MWBase::World* world = MWBase::Environment::get().getWorld();
         const MWWorld::Store<ESM::GameSetting>& store = world->getStore().get<ESM::GameSetting>();
         const float fCombatDistance = store.find("fCombatDistance")->mValue.getFloat();
-        if (!weapon.isEmpty())
+        if (!weapon.isEmpty() && weapon.getType() == ESM::Weapon::sRecordId)
             return fCombatDistance * weapon.get<ESM::Weapon>()->mBase->mData.mReach;
-        if (actor.getClass().isNpc())
+        if (!actor.isEmpty() && actor.getClass().isNpc())
             return fCombatDistance * store.find("fHandToHandReach")->mValue.getFloat();
         return fCombatDistance;
     }
 
     bool isInMeleeReach(const MWWorld::Ptr& actor, const MWWorld::Ptr& target, const float reach)
     {
+        if (actor.isEmpty() || target.isEmpty())
+            return false;
+
         const float heightDiff = actor.getRefData().getPosition().pos[2] - target.getRefData().getPosition().pos[2];
         return std::abs(heightDiff) < reach && getDistanceToBounds(actor, target) < reach;
     }
 
     std::pair<MWWorld::Ptr, osg::Vec3f> getHitContact(const MWWorld::Ptr& actor, float reach)
     {
+        if (actor.isEmpty() || !actor.getClass().isActor())
+            return {};
+
         // Lasciate ogne speranza, voi ch'entrate
         MWWorld::Ptr result;
         osg::Vec3f hitPos;
@@ -668,7 +709,8 @@ namespace MWMechanics
 
         for (MWWorld::Ptr& target : targets)
         {
-            if (actor == target || target.getClass().getCreatureStats(target).isDead())
+            if (target.isEmpty() || !target.getClass().isActor() || actor == target
+                || target.getClass().getCreatureStats(target).isDead())
                 continue;
 
             const float dist = getDistanceToBounds(actor, target);
@@ -741,7 +783,7 @@ namespace MWMechanics
     bool friendlyHit(const MWWorld::Ptr& attacker, const MWWorld::Ptr& target, bool complain)
     {
         const MWWorld::Ptr& player = getPlayer();
-        if (attacker != player)
+        if (attacker != player || target.isEmpty() || !target.getClass().isActor())
             return false;
 
         std::set<MWWorld::Ptr> followersAttacker;
