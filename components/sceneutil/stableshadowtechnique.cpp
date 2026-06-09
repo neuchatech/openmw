@@ -148,6 +148,11 @@ namespace
             return 0.0;
         return diameter / static_cast<double>(resolution) * 0.5;
     }
+
+    bool differs(double lhs, double rhs)
+    {
+        return std::abs(lhs - rhs) > std::max(0.001, std::max(std::abs(lhs), std::abs(rhs)) * 0.0001);
+    }
 }
 
 namespace SceneUtil
@@ -176,6 +181,7 @@ namespace SceneUtil
         bool mLightDirValid = false;
         bool mRenderedOnce = false;
         unsigned int mLastRefreshTraversal = 0;
+        unsigned int mNextCascadeRefreshIndex = 0;
         unsigned int mLastCasterMask = 0;
         unsigned int mLastCascadeCount = 0;
         int mLastResolution = 0;
@@ -344,6 +350,71 @@ namespace SceneUtil
             if (!makeLightBasis(effectiveLightDir, lightSide, lightUp))
                 continue;
 
+            struct PreparedCascade
+            {
+                osg::Matrixd mViewMatrix;
+                osg::Matrixd mProjectionMatrix;
+                osg::Vec3d mCenter;
+                double mDiameter = 0.0;
+                double mNear = 0.0;
+                double mFar = 0.0;
+                double mRadius = 0.0;
+                bool mRefreshRequested = false;
+            };
+
+            std::vector<PreparedCascade> preparedCascades(cascadeCount);
+            for (unsigned int cascade = 0; cascade < cascadeCount; ++cascade)
+            {
+                StableViewDependentData::Cascade& cache = stableVdd->mCascades[cascade];
+                PreparedCascade& prepared = preparedCascades[cascade];
+
+                prepared.mNear = computeSplitDistance(
+                    minZNear, maxZFar, cascade, cascadeCount, mSettings.mSplitLambda);
+                prepared.mFar = computeSplitDistance(
+                    minZNear, maxZFar, cascade + 1, cascadeCount, mSettings.mSplitLambda);
+                const std::array<osg::Vec3d, 8> corners = getCascadeCorners(frustum, prepared.mNear, prepared.mFar);
+
+                prepared.mCenter = average(corners);
+                prepared.mRadius = std::ceil(radius(corners, prepared.mCenter) * 16.0) / 16.0;
+                prepared.mDiameter = prepared.mRadius * 2.0;
+
+                if (mSettings.mTexelSnapping)
+                    prepared.mCenter = snapCenterToTexels(
+                        prepared.mCenter, lightSide, lightUp, prepared.mDiameter, mSettings.mResolution);
+
+                const double depthRange = std::max<double>(mSettings.mDistance, prepared.mRadius * 4.0);
+
+                prepared.mViewMatrix.makeLookAt(
+                    prepared.mCenter - effectiveLightDir * depthRange, prepared.mCenter, lightUp);
+
+                prepared.mProjectionMatrix.makeOrtho(
+                    -prepared.mRadius, prepared.mRadius, -prepared.mRadius, prepared.mRadius, 0.0, depthRange * 2.0);
+
+                const double centerThreshold = centerRefreshThreshold(prepared.mDiameter, mSettings.mResolution);
+                const bool centerChanged
+                    = !cache.mValid || (cache.mCenter - prepared.mCenter).length2() > centerThreshold * centerThreshold;
+                const bool cascadeShapeChanged = !cache.mValid || differs(cache.mDiameter, prepared.mDiameter)
+                    || differs(cache.mNear, prepared.mNear) || differs(cache.mFar, prepared.mFar);
+                prepared.mRefreshRequested = !cache.mValid || configChanged
+                    || (intervalElapsed && (sunRefreshNeeded || centerChanged || cascadeShapeChanged));
+            }
+
+            const bool refreshAllRequestedCascades = configChanged || !stableVdd->mRenderedOnce || sunRefreshNeeded;
+            unsigned int selectedCascade = cascadeCount;
+            if (!refreshAllRequestedCascades && intervalElapsed && cascadeCount > 0)
+            {
+                const unsigned int startCascade = stableVdd->mNextCascadeRefreshIndex % cascadeCount;
+                for (unsigned int offset = 0; offset < cascadeCount; ++offset)
+                {
+                    const unsigned int candidate = (startCascade + offset) % cascadeCount;
+                    if (preparedCascades[candidate].mRefreshRequested)
+                    {
+                        selectedCascade = candidate;
+                        break;
+                    }
+                }
+            }
+
             for (unsigned int cascade = 0; cascade < cascadeCount; ++cascade)
             {
                 osg::ref_ptr<ShadowData> shadowData;
@@ -359,47 +430,18 @@ namespace SceneUtil
                 applyShadowCameraCullingSettings(*camera);
 
                 StableViewDependentData::Cascade& cache = stableVdd->mCascades[cascade];
-
-                const double cascadeNear = computeSplitDistance(
-                    minZNear, maxZFar, cascade, cascadeCount, mSettings.mSplitLambda);
-                const double cascadeFar = computeSplitDistance(
-                    minZNear, maxZFar, cascade + 1, cascadeCount, mSettings.mSplitLambda);
-                const std::array<osg::Vec3d, 8> corners = getCascadeCorners(frustum, cascadeNear, cascadeFar);
-
-                osg::Vec3d cascadeCenter = average(corners);
-                double cascadeRadius = radius(corners, cascadeCenter);
-                cascadeRadius = std::ceil(cascadeRadius * 16.0) / 16.0;
-                const double cascadeDiameter = cascadeRadius * 2.0;
-
-                if (mSettings.mTexelSnapping)
-                    cascadeCenter = snapCenterToTexels(
-                        cascadeCenter, lightSide, lightUp, cascadeDiameter, mSettings.mResolution);
-
-                const double depthRange = std::max<double>(mSettings.mDistance, cascadeRadius * 4.0);
-
-                osg::Matrixd viewMatrix;
-                viewMatrix.makeLookAt(cascadeCenter - effectiveLightDir * depthRange, cascadeCenter, lightUp);
-
-                osg::Matrixd projectionMatrix;
-                projectionMatrix.makeOrtho(
-                    -cascadeRadius, cascadeRadius, -cascadeRadius, cascadeRadius, 0.0, depthRange * 2.0);
-
-                const double centerThreshold = centerRefreshThreshold(cascadeDiameter, mSettings.mResolution);
-                const bool centerChanged
-                    = !cache.mValid || (cache.mCenter - cascadeCenter).length2() > centerThreshold * centerThreshold;
-                const bool cascadeShapeChanged = !cache.mValid || cache.mDiameter != cascadeDiameter
-                    || cache.mNear != cascadeNear || cache.mFar != cascadeFar;
-                const bool refreshCascade = !cache.mValid || configChanged
-                    || (intervalElapsed && (sunRefreshNeeded || centerChanged || cascadeShapeChanged));
+                const PreparedCascade& prepared = preparedCascades[cascade];
+                const bool refreshCascade = prepared.mRefreshRequested
+                    && (refreshAllRequestedCascades || !cache.mValid || cascade == selectedCascade);
 
                 if (refreshCascade)
                 {
-                    cache.mViewMatrix = viewMatrix;
-                    cache.mProjectionMatrix = projectionMatrix;
-                    cache.mCenter = cascadeCenter;
-                    cache.mDiameter = cascadeDiameter;
-                    cache.mNear = cascadeNear;
-                    cache.mFar = cascadeFar;
+                    cache.mViewMatrix = prepared.mViewMatrix;
+                    cache.mProjectionMatrix = prepared.mProjectionMatrix;
+                    cache.mCenter = prepared.mCenter;
+                    cache.mDiameter = prepared.mDiameter;
+                    cache.mNear = prepared.mNear;
+                    cache.mFar = prepared.mFar;
                     cache.mValid = true;
                 }
 
@@ -419,6 +461,8 @@ namespace SceneUtil
                         = osg::Timer::instance()->delta_m(cascadeCullStart, osg::Timer::instance()->tick());
 
                     cv.popStateSet();
+                    if (!refreshAllRequestedCascades)
+                        stableVdd->mNextCascadeRefreshIndex = (cascade + 1) % cascadeCount;
                     refreshedAnyCascade = true;
                 }
 
@@ -441,8 +485,8 @@ namespace SceneUtil
                                      << " mask=" << settings->getCastsShadowTraversalMask()
                                      << " cull_ms=" << cascadeCullMs << " resolution=" << textureSize.x() << "x"
                                      << textureSize.y() << " distance=" << mSettings.mDistance
-                                     << " near=" << cascadeNear << " far=" << cascadeFar
-                                     << " radius=" << cascadeRadius;
+                                     << " near=" << prepared.mNear << " far=" << prepared.mFar
+                                     << " radius=" << prepared.mRadius;
                 }
 
                 ++textureUnit;
