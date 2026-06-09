@@ -460,7 +460,9 @@ namespace MWRender
 
         int indoorShadowCastingTraversalMask = shadowCastingTraversalMask;
         if (Settings::shadows().mObjectShadows)
-            shadowCastingTraversalMask |= (Mask_Object | Mask_Static);
+            shadowCastingTraversalMask |= Mask_Object;
+        if (Settings::shadows().mStaticObjectShadows)
+            shadowCastingTraversalMask |= Mask_Static;
         if (Settings::shadows().mTerrainShadows)
             shadowCastingTraversalMask |= Mask_Terrain;
 
@@ -1555,6 +1557,8 @@ namespace MWRender
         unsigned int frameNumber = mViewer->getFrameStamp()->getFrameNumber();
         if (stats->collectStats("resource"))
         {
+            if (mEffectManager)
+                mEffectManager->reportStats(frameNumber, *stats);
             mTerrain->reportStats(frameNumber, stats);
         }
     }

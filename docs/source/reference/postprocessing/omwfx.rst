@@ -375,6 +375,13 @@ In the code snippet below, a shader is defined that requires GLSL `330`, HDR cap
         flags = disable_interiors, disable_abovewater;
     }
 
+Bundled Techniques
+******************
+
+OpenMW includes a small set of bundled ``.omwfx`` techniques in the ``shaders`` directory.
+``contactao`` is a lightweight contact ambient occlusion shader intended to ground nearby clutter, actors, steps, and object contact lines.
+It sets ``pass_normals = true`` and uses depth, normals, world position, fog coverage, and screen resolution helpers.
+
 
 ``sampler_*``
 *************

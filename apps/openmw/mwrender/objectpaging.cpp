@@ -962,7 +962,7 @@ namespace MWRender
         }
 
         group->getBound();
-        group->setNodeMask(Mask_Static);
+        group->setNodeMask(activeGrid ? Mask_Object : Mask_Static);
         osg::UserDataContainer* udc = group->getOrCreateUserDataContainer();
         if (activeGrid)
         {
@@ -979,7 +979,7 @@ namespace MWRender
 
     unsigned int ObjectPaging::getNodeMask()
     {
-        return Mask_Static;
+        return Mask_Object | Mask_Static;
     }
 
     namespace

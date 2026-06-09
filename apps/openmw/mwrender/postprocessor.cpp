@@ -108,6 +108,15 @@ namespace
         return Stereo::createMultiviewCompatibleAttachment(texture);
     }
 
+    template <class T>
+    void setTechniqueUniform(const std::shared_ptr<Fx::Technique>& technique, const std::string& name, const T& value)
+    {
+        auto it = technique->findUniform(name);
+        if (it == technique->getUniformMap().end() || (*it)->mStatic)
+            return;
+        (*it)->setValue(value);
+    }
+
     constexpr float DistortionRatio = 0.25;
 }
 
@@ -806,18 +815,35 @@ namespace MWRender
     void PostProcessor::loadChain()
     {
         mTechniques.clear();
+        mContactAoInjected = false;
 
         for (const auto& technique : mInternalTechniques)
         {
             mTechniques.push_back(technique);
         }
 
-        for (const std::string& techniqueName : Settings::postProcessing().mChain.get())
+        std::vector<std::string> chain = Settings::postProcessing().mChain.get();
+        if (Settings::shadows().mEnableAmbientOcclusion && Settings::shadows().mAoMethod.get() == "contact"
+            && std::find(chain.begin(), chain.end(), "contactao") == chain.end())
+        {
+            chain.emplace_back("contactao");
+            mContactAoInjected = true;
+        }
+
+        for (const std::string& techniqueName : chain)
         {
             if (techniqueName.empty())
                 continue;
 
-            mTechniques.push_back(loadTechnique(techniqueName));
+            std::shared_ptr<Fx::Technique> technique = loadTechnique(techniqueName);
+            if (techniqueName == "contactao")
+            {
+                setTechniqueUniform(technique, "uRadius", Settings::shadows().mAoRadius.get());
+                setTechniqueUniform(technique, "uStrength", Settings::shadows().mAoStrength.get());
+                setTechniqueUniform(technique, "uSampleCount", Settings::shadows().mAoSampleCount.get());
+                setTechniqueUniform(technique, "uFadeDistance", Settings::shadows().mAoFadeDistance.get());
+            }
+            mTechniques.push_back(std::move(technique));
         }
 
         dirtyTechniques();
@@ -830,6 +856,8 @@ namespace MWRender
         for (const auto& technique : mTechniques)
         {
             if (technique->getDynamic() || technique->getInternal())
+                continue;
+            if (mContactAoInjected && technique->getName() == "contactao")
                 continue;
             chain.push_back(technique->getName());
         }

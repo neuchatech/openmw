@@ -3876,6 +3876,7 @@ namespace MWWorld
     {
         DetourNavigator::reportStats(mNavigator->getStats(), frameNumber, stats);
         mPhysics->reportStats(frameNumber, stats);
+        mProjectileManager->reportStats(frameNumber, stats);
         mWorldScene->reportStats(frameNumber, stats);
     }
 

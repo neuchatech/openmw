@@ -23,6 +23,17 @@ Shadows Settings
    More maps improve shadow quality but may reduce performance or cause texture conflicts.
 
 .. omw-setting::
+   :title: shadow mapping method
+   :type: string
+   :range: legacy vdsm | stable csm
+   :default: stable csm
+   :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
+
+   Selects the shadow mapping implementation.
+   ``legacy vdsm`` uses the original view-dependent shadow maps.
+   ``stable csm`` uses snapped orthographic cascades intended to reduce shimmering.
+
+.. omw-setting::
    :title: maximum shadow map distance
    :type: float32
    :range: full 32-bit float range
@@ -106,7 +117,7 @@ Shadows Settings
    :title: terrain shadows
    :type: boolean
    :range: true, false
-   :default: false
+   :default: true
    :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
 
    Enable shadows cast by terrain.
@@ -116,11 +127,73 @@ Shadows Settings
    :title: object shadows
    :type: boolean
    :range: true, false
+   :default: true
+   :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
+
+   Enable shadows cast by regular placed world objects and active-grid paged statics near the player.
+   Non-active-grid paged static exterior geometry is controlled separately by ``static object shadows``.
+   May reduce performance.
+
+.. omw-setting::
+   :title: static object shadows
+   :type: boolean
+   :range: true, false
    :default: false
    :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
 
-   Enable shadows cast by static objects.
-   May reduce performance.
+   Enable shadows cast by non-active-grid paged static exterior geometry, such as merged building chunks.
+   This can be expensive in dense cities.
+
+.. omw-setting::
+   :title: small object shadows
+   :type: boolean
+   :range: true, false
+   :default: false
+   :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
+
+   Reserved control for very small object casters.
+   Contact ambient occlusion is usually cheaper for grounding small clutter.
+
+.. omw-setting::
+   :title: shadow caster min radius
+   :type: float32
+   :range: >= 0
+   :default: 32
+
+   Reserved minimum caster radius for future per-object shadow filtering.
+
+.. omw-setting::
+   :title: shadow caster max distance
+   :type: float32
+   :range: >= 0
+   :default: 8192
+
+   Reserved maximum caster distance for future per-object shadow filtering.
+
+.. omw-setting::
+   :title: shadow small feature culling
+   :type: boolean
+   :range: true, false
+   :default: true
+
+   Enables small feature culling on shadow cameras.
+   Can improve dense-scene shadow performance, but may remove very small casters from shadow maps.
+
+.. omw-setting::
+   :title: shadow small feature culling pixel size
+   :type: float32
+   :range: >= 0
+   :default: 4.0
+
+   Pixel threshold used by shadow-camera small feature culling.
+
+.. omw-setting::
+   :title: enable shadow cascade stats
+   :type: boolean
+   :range: true, false
+   :default: false
+
+   Logs per-cascade shadow cull timing and cascade counts for profiling.
 
 .. omw-setting::
    :title: enable indoor shadows
@@ -177,6 +250,112 @@ Shadows Settings
 
    Controls balance between logarithmic and uniform split points for shadow splits.
    Adjust when using large view distances or distant terrain.
+
+.. omw-setting::
+   :title: stable csm cascades
+   :type: int
+   :range: 1 to 8
+   :default: 3
+
+   Number of cascades used by the stable CSM shadow path.
+
+.. omw-setting::
+   :title: stable csm resolution
+   :type: int
+   :range: dependent on GPU/driver
+   :default: 2048
+
+   Shadow map resolution used by each stable CSM cascade.
+
+.. omw-setting::
+   :title: stable csm distance
+   :type: float32
+   :range: > 0
+   :default: 8192
+
+   Maximum distance covered by stable CSM shadows.
+
+.. omw-setting::
+   :title: stable csm split lambda
+   :type: float32
+   :range: [0, 1]
+   :default: 0.65
+
+   Blend between uniform and logarithmic cascade split placement.
+
+.. omw-setting::
+   :title: stable csm texel snapping
+   :type: boolean
+   :range: true, false
+   :default: true
+
+   Snaps stable CSM cascade centers to shadow texel increments to reduce shimmering.
+
+.. omw-setting::
+   :title: stable csm update interval
+   :type: int
+   :range: 1 to 60
+   :default: 3
+
+   Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating.
+   Higher values reduce shadow-map churn, but can make shadows lag slightly while moving.
+
+.. omw-setting::
+   :title: stable csm sun update angle threshold
+   :type: float32
+   :range: >= 0
+   :default: 1.0
+
+   Sun angle change, in degrees, required before stable CSM refreshes for sun movement.
+   Higher values reduce thin-shadow flicker from tiny sun motion.
+
+.. omw-setting::
+   :title: enable ambient occlusion
+   :type: boolean
+   :range: true, false
+   :default: true
+
+   Enables the built-in contact ambient occlusion post-process.
+
+.. omw-setting::
+   :title: ao method
+   :type: string
+   :range: contact | none
+   :default: contact
+
+   Selects the ambient occlusion method.
+
+.. omw-setting::
+   :title: ao radius
+   :type: float32
+   :range: >= 0
+   :default: 90
+
+   Default contact ambient occlusion sample radius in game units.
+
+.. omw-setting::
+   :title: ao strength
+   :type: float32
+   :range: >= 0
+   :default: 0.65
+
+   Default contact ambient occlusion strength.
+
+.. omw-setting::
+   :title: ao sample count
+   :type: int
+   :range: 1 to 32
+   :default: 8
+
+   Default number of contact ambient occlusion samples.
+
+.. omw-setting::
+   :title: ao fade distance
+   :type: float32
+   :range: >= 0
+   :default: 4096
+
+   Distance where contact ambient occlusion fades out.
 
 .. omw-setting::
    :title: split point bias

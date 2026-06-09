@@ -8,10 +8,21 @@
 #include <components/stereo/stereomanager.hpp>
 
 #include "mwshadowtechnique.hpp"
+#include "stableshadowtechnique.hpp"
 
 namespace SceneUtil
 {
     using namespace osgShadow;
+
+    namespace
+    {
+        MWShadowTechnique* makeShadowTechnique(const Settings::ShadowsCategory& settings)
+        {
+            if (Misc::StringUtils::ciEqual(settings.mShadowMappingMethod.get(), "stable csm"))
+                return new StableShadowTechnique;
+            return new MWShadowTechnique;
+        }
+    }
 
     ShadowManager* ShadowManager::sInstance = nullptr;
 
@@ -39,13 +50,14 @@ namespace SceneUtil
         mShadowSettings->setLightNum(0);
         mShadowSettings->setReceivesShadowTraversalMask(~0u);
 
-        const int numberOfShadowMapsPerLight = settings.mNumberOfShadowMaps;
+        const bool stableCsm = Misc::StringUtils::ciEqual(settings.mShadowMappingMethod.get(), "stable csm");
+        const int numberOfShadowMapsPerLight = stableCsm ? settings.mStableCsmCascades : settings.mNumberOfShadowMaps;
 
         mShadowSettings->setNumShadowMapsPerLight(numberOfShadowMapsPerLight);
         mShadowSettings->setBaseShadowTextureUnit(shaderManager.reserveGlobalTextureUnits(
             Shader::ShaderManager::Slot::ShadowMaps, numberOfShadowMapsPerLight));
 
-        const float maximumShadowMapDistance = settings.mMaximumShadowMapDistance;
+        const float maximumShadowMapDistance = stableCsm ? settings.mStableCsmDistance : settings.mMaximumShadowMapDistance;
         if (maximumShadowMapDistance > 0)
         {
             const float shadowFadeStart = settings.mShadowFadeStart;
@@ -61,11 +73,27 @@ namespace SceneUtil
         else if (Misc::StringUtils::ciEqual(computeSceneBounds, "bounds"))
             mShadowSettings->setComputeNearFarModeOverride(osg::CullSettings::COMPUTE_NEAR_FAR_USING_BOUNDING_VOLUMES);
 
-        const short mapres = static_cast<short>(settings.mShadowMapResolution);
+        const short mapres = static_cast<short>(stableCsm ? settings.mStableCsmResolution : settings.mShadowMapResolution);
         mShadowSettings->setTextureSize(osg::Vec2s(mapres, mapres));
 
         mShadowTechnique->setSplitPointUniformLogarithmicRatio(settings.mSplitPointUniformLogarithmicRatio);
         mShadowTechnique->setSplitPointDeltaBias(settings.mSplitPointBias);
+        mShadowTechnique->setShadowSmallFeatureCulling(
+            settings.mShadowSmallFeatureCulling, settings.mShadowSmallFeatureCullingPixelSize);
+        mShadowTechnique->setCascadeStatsEnabled(settings.mEnableShadowCascadeStats);
+
+        if (StableShadowTechnique* stableShadowTechnique = dynamic_cast<StableShadowTechnique*>(mShadowTechnique.get()))
+        {
+            stableShadowTechnique->setStableSettings(StableShadowTechnique::Settings{
+                .mCascadeCount = settings.mStableCsmCascades,
+                .mResolution = settings.mStableCsmResolution,
+                .mDistance = settings.mStableCsmDistance,
+                .mSplitLambda = settings.mStableCsmSplitLambda,
+                .mTexelSnapping = settings.mStableCsmTexelSnapping,
+                .mUpdateInterval = settings.mStableCsmUpdateInterval,
+                .mSunUpdateAngleThreshold = settings.mStableCsmSunUpdateAngleThreshold,
+            });
+        }
 
         mShadowTechnique->setPolygonOffset(settings.mPolygonOffsetFactor, settings.mPolygonOffsetUnits);
 
@@ -112,7 +140,7 @@ namespace SceneUtil
         unsigned int outdoorShadowCastingMask, unsigned int indoorShadowCastingMask, unsigned int worldMask,
         const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager)
         : mShadowedScene(new osgShadow::ShadowedScene)
-        , mShadowTechnique(new MWShadowTechnique)
+        , mShadowTechnique(makeShadowTechnique(settings))
         , mOutdoorShadowCastingMask(outdoorShadowCastingMask)
         , mIndoorShadowCastingMask(indoorShadowCastingMask)
     {

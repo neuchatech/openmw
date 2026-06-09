@@ -25,6 +25,9 @@
 #include <osg/io_utils>
 #include <osg/Depth>
 #include <osg/ClipControl>
+#include <osg/Timer>
+
+#include <components/debug/debuglog.hpp>
 
 #include <sstream>
 #include <vector>
@@ -583,8 +586,7 @@ MWShadowTechnique::ShadowData::ShadowData(MWShadowTechnique::ViewDependentData* 
     // TODO: Find a better solution. E.g. detect when there are no casters outside the view frustum, write a new cull visitor that does all the wacky things we'd need it to.
     _camera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
 
-    // switch off small feature culling as this can cull out geometry that will still be large enough once perspective correction takes effect.
-    _camera->setCullingMode(_camera->getCullingMode() & ~osg::CullSettings::SMALL_FEATURE_CULLING);
+    vdd->getViewDependentShadowMap()->applyShadowCameraCullingSettings(*_camera);
 
     // set viewport
     _camera->setViewport(0,0,textureSize.x(),textureSize.y());
@@ -913,6 +915,30 @@ void SceneUtil::MWShadowTechnique::disableFrontFaceCulling()
         _shadowCastingStateSet->removeAttribute(osg::StateAttribute::CULLFACE);
         _shadowCastingStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
     }
+}
+
+void SceneUtil::MWShadowTechnique::setShadowSmallFeatureCulling(bool enabled, float pixelSize)
+{
+    _shadowSmallFeatureCulling = enabled;
+    _shadowSmallFeatureCullingPixelSize = pixelSize;
+}
+
+void SceneUtil::MWShadowTechnique::setCascadeStatsEnabled(bool enabled)
+{
+    _cascadeStatsEnabled = enabled;
+}
+
+void SceneUtil::MWShadowTechnique::applyShadowCameraCullingSettings(osg::Camera& camera) const
+{
+    osg::Camera::CullingMode cullingMode = camera.getCullingMode();
+    if (_shadowSmallFeatureCulling)
+    {
+        cullingMode |= osg::CullSettings::SMALL_FEATURE_CULLING;
+        camera.setSmallFeatureCullingPixelSize(_shadowSmallFeatureCullingPixelSize);
+    }
+    else
+        cullingMode &= ~osg::CullSettings::SMALL_FEATURE_CULLING;
+    camera.setCullingMode(cullingMode);
 }
 
 void SceneUtil::MWShadowTechnique::setupCastingShader(Shader::ShaderManager & shaderManager)
@@ -1366,6 +1392,7 @@ void MWShadowTechnique::cull(osgUtil::CullVisitor& cv)
 
             camera->setProjectionMatrix(projectionMatrix);
             camera->setViewMatrix(viewMatrix);
+            applyShadowCameraCullingSettings(*camera);
 
             if (settings->getDebugDraw())
             {
@@ -1508,9 +1535,20 @@ void MWShadowTechnique::cull(osgUtil::CullVisitor& cv)
 
             cv.pushStateSet(_shadowCastingStateSet.get());
 
+            const osg::Timer_t cascadeCullStart = osg::Timer::instance()->tick();
             cullShadowCastingScene(&cv, camera.get());
+            const double cascadeCullMs = osg::Timer::instance()->delta_m(cascadeCullStart, osg::Timer::instance()->tick());
 
             cv.popStateSet();
+
+            if (_cascadeStatsEnabled && cv.getTraversalNumber() % 120 == 0)
+            {
+                const osg::Vec2s textureSize = settings->getTextureSize();
+                Log(Debug::Info) << "Shadow cascade method=legacy-vdsm cascade=" << sm_i
+                                 << " mask=" << _shadowedScene->getShadowSettings()->getCastsShadowTraversalMask()
+                                 << " cull_ms=" << cascadeCullMs << " resolution=" << textureSize.x() << "x"
+                                 << textureSize.y() << " distance=" << settings->getMaximumShadowMapDistance();
+            }
 
             if (!orthographicViewFrustum && settings->getShadowMapProjectionHint()==ShadowSettings::PERSPECTIVE_SHADOW_MAP)
             {
@@ -1551,6 +1589,10 @@ void MWShadowTechnique::cull(osgUtil::CullVisitor& cv)
     }
 
     vdd->setNumValidShadows(numValidShadows);
+
+    if (_cascadeStatsEnabled && cv.getTraversalNumber() % 120 == 0)
+        Log(Debug::Info) << "Shadow cascades method=legacy-vdsm valid=" << numValidShadows
+                         << " requested=" << numShadowMapsPerLight;
 
     if (numValidShadows>0)
     {

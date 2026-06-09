@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Morraiwind Shadow and AO Sprint Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2a32;
+      --muted: #5d6a72;
+      --line: #cfd8dc;
+      --paper: #f7f5ef;
+      --panel: #ffffff;
+      --accent: #236f8e;
+      --accent-2: #8b5a2b;
+      --good: #287a50;
+      --warn: #9a6a16;
+      --todo: #7b536e;
+      --code: #17232b;
+      --code-bg: #eef3f5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      line-height: 1.48;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 26px 0 20px;
+      margin-bottom: 24px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    h1 {
+      max-width: 860px;
+      font-size: clamp(2rem, 4vw, 4rem);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 30px;
+      padding-top: 8px;
+      font-size: 1.55rem;
+    }
+
+    h3 {
+      margin-top: 18px;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent-2);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgb(31 42 50 / 0.04);
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .done {
+      background: var(--good);
+    }
+
+    .pending {
+      background: var(--warn);
+    }
+
+    .risk {
+      background: var(--todo);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: table;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eaf0f2;
+      font-size: 0.86rem;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      color: var(--code);
+      background: var(--code-bg);
+      border: 1px solid #d6e0e4;
+      border-radius: 4px;
+      padding: 0.05rem 0.28rem;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.93em;
+    }
+
+    pre {
+      margin: 12px 0 18px;
+      padding: 14px;
+      overflow-x: auto;
+      color: #edf5f7;
+      background: #17232b;
+      border-radius: 8px;
+      border: 1px solid #0e161b;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    pre code {
+      color: inherit;
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      background: #edf4f6;
+      padding: 10px 14px;
+      margin: 14px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning {
+      border-left-color: var(--warn);
+      background: #fbf3df;
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 24px;
+    }
+
+    .toc a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 10px;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+
+    .svg-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 14px 0 20px;
+      overflow-x: auto;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-width: 680px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .file-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 8px 16px;
+      margin: 10px 0 20px;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        width: min(100% - 24px, 1120px);
+        padding-top: 18px;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">OpenMW fork - morraiwind branch - 2026-06-09</p>
+    <h1>Shadow and AO Sprint Report</h1>
+    <p class="lead">
+      Current implementation status, architecture notes, diagrams, and PowerShell commands for the local build and
+      Old Ebonheart smoke/perf pass.
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="Report sections">
+    <a href="#where">Where We Are</a>
+    <a href="#changes">Implementation Map</a>
+    <a href="#pipeline">Shadow Pipeline</a>
+    <a href="#stable-csm">Stable CSM</a>
+    <a href="#ao">Contact AO</a>
+    <a href="#perf">Perf Baseline</a>
+    <a href="#commands">PowerShell Commands</a>
+    <a href="#tests">Smoke Test Matrix</a>
+    <a href="#combat-stall">Combat Stall</a>
+    <a href="#risks">Risks</a>
+  </nav>
+
+  <section id="where">
+    <h2>Where We Are</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Implemented In The Working Tree</h3>
+        <p>
+          The settings, caster mask split, selectable stable CSM technique, cascade stats logging, contact AO shader,
+          runtime AO chain hook, launcher controls, docs, and shader compatibility fix are present in local files.
+        </p>
+        <span class="status done">implemented</span>
+      </article>
+      <article class="card">
+        <h3>Verified So Far</h3>
+        <p>
+          Key changed C++ files passed direct MSVC syntax-only checks. Release <code>openmw.exe</code> and
+          <code>openmw-launcher.exe</code> build after the stable CSM refresh-cache and launcher-control changes.
+        </p>
+        <span class="status done">build passed</span>
+      </article>
+      <article class="card">
+        <h3>Still Pending</h3>
+        <p>
+          Launch the changed renderer, validate stable CSM visually after the flicker fix, and rerun the
+          Old Ebonheart perf matrix against the sprint baseline.
+        </p>
+        <span class="status risk">runtime pending</span>
+      </article>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>What Changed</th>
+          <th>Validation State</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Instrumentation/perf visibility</td>
+          <td><span class="status done">implemented</span></td>
+          <td>
+            Added <code>enable shadow cascade stats</code>. Legacy VDSM and stable CSM can log cascade count,
+            mask, resolution/distance, and per-cascade CPU cull timing.
+          </td>
+          <td>Needs runtime log capture in Old Ebonheart.</td>
+        </tr>
+        <tr>
+          <td>2. Split object/static shadows</td>
+          <td><span class="status done">implemented</span></td>
+          <td>
+            <code>object shadows</code> now controls <code>Mask_Object</code>; new
+            <code>static object shadows</code> controls non-active-grid <code>Mask_Static</code>. Nearby active-grid
+            object-paging chunks use <code>Mask_Object</code> so rocks and stone formations can cast with Object
+            Shadows enabled.
+          </td>
+          <td>Expected first perf win; needs visual/FPS confirmation.</td>
+        </tr>
+        <tr>
+          <td>3. Stable CSM beside legacy VDSM</td>
+          <td><span class="status done">implemented</span></td>
+          <td>
+            Added <code>SceneUtil::StableShadowTechnique</code> and
+            <code>shadow mapping method = stable csm</code>. Legacy <code>MWShadowTechnique</code> remains selectable
+            via <code>legacy vdsm</code>. Stable CSM now caches cascade projections/textures and refreshes only when
+            movement, settings, caster masks, or sun-angle threshold require it.
+          </td>
+          <td>Release build passed; runtime flicker retest pending.</td>
+        </tr>
+        <tr>
+          <td>4. Contact AO postprocess</td>
+          <td><span class="status done">implemented</span></td>
+          <td>
+            Added <code>files/data/shaders/contactao.omwfx</code>. When AO is enabled and method is
+            <code>contact</code>, the postprocessor adds <code>contactao</code> to the runtime chain if missing.
+          </td>
+          <td>Shader compile and visual tuning still pending.</td>
+        </tr>
+        <tr>
+          <td>5. Old Ebonheart smoke/perf tests</td>
+          <td><span class="status risk">pending</span></td>
+          <td>
+            Test plan is below. A fresh Release build now succeeds locally.
+          </td>
+          <td>Needs your Old Ebonheart run with the current executable.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      Current flicker fix defaults: stable CSM refreshes at most every 3 frames when a refresh is needed, and tiny sun
+      motion is ignored until the sun direction changes by more than 1 degree.
+    </div>
+  </section>
+
+  <section id="changes">
+    <h2>Implementation Map</h2>
+    <p>
+      The sprint is implemented as a side-by-side path. The old technique is preserved, settings choose the path, and
+      static world geometry gets its own caster switch.
+    </p>
+
+    <ul class="file-list">
+      <li><code>components/sceneutil/stableshadowtechnique.cpp/.hpp</code>: new stable CSM path.</li>
+      <li><code>components/sceneutil/shadow.cpp</code>: creates legacy VDSM or stable CSM from settings.</li>
+      <li><code>components/sceneutil/mwshadowtechnique.cpp/.hpp</code>: shared knobs for stats and small-feature culling.</li>
+      <li><code>apps/openmw/mwrender/renderingmanager.cpp</code>: splits <code>Mask_Object</code> from <code>Mask_Static</code>.</li>
+      <li><code>apps/openmw/mwrender/postprocessor.cpp</code>: auto-adds <code>contactao</code> when contact AO is enabled.</li>
+      <li><code>apps/launcher/settingspage.cpp</code> and <code>apps/launcher/ui/settingspage.ui</code>: launcher controls for stable CSM, static object shadows, cascade stats, and contact AO.</li>
+      <li><code>files/data/shaders/contactao.omwfx</code>: lightweight depth/normal/world-position AO pass.</li>
+      <li><code>files/shaders/compatibility/shadows_fragment.glsl</code>: cascade sampling also checks projected Z.</li>
+      <li><code>files/settings-default.cfg</code>: stable CSM defaults, static shadows off, AO contact on.</li>
+      <li><code>components/settings/categories/shadows.hpp</code>: typed settings declarations.</li>
+      <li><code>docs/source/reference/modding/settings/shadows.rst</code>: settings reference updates.</li>
+      <li><code>docs/source/reference/postprocessing/omwfx.rst</code>: bundled <code>contactao</code> documentation note.</li>
+    </ul>
+
+    <p class="small">
+      Current tracked diff stat: 12 modified files, 383 insertions, 13 deletions, plus new untracked stable CSM and
+      contact AO files.
+    </p>
+  </section>
+
+  <section id="pipeline">
+    <h2>Shadow Pipeline</h2>
+    <p>
+      OpenMW shadows are driven by scene masks and an OSG shadow technique. The sprint keeps that contract intact:
+      the renderer decides which categories may cast, the shadow manager creates shadow maps, and receiver shaders
+      sample <code>shadowTexture0..N</code> with existing uniform layout.
+    </p>
+
+    <div class="svg-wrap">
+      <svg viewBox="0 0 980 360" role="img" aria-label="Shadow pipeline diagram">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#236f8e"></path>
+          </marker>
+          <style>
+            .box { fill: #ffffff; stroke: #9fb3bc; stroke-width: 2; rx: 8; }
+            .title { fill: #1f2a32; font: 700 17px Segoe UI, Arial, sans-serif; }
+            .txt { fill: #43515a; font: 13px Segoe UI, Arial, sans-serif; }
+            .line { stroke: #236f8e; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+            .sub { fill: #edf4f6; stroke: #9fb3bc; stroke-width: 1.4; rx: 6; }
+          </style>
+        </defs>
+
+        <rect class="box" x="20" y="50" width="180" height="120"></rect>
+        <text class="title" x="38" y="80">[Shadows] settings</text>
+        <text class="txt" x="38" y="108">mapping method</text>
+        <text class="txt" x="38" y="130">caster categories</text>
+        <text class="txt" x="38" y="152">AO/contact params</text>
+
+        <rect class="box" x="260" y="30" width="200" height="160"></rect>
+        <text class="title" x="278" y="62">RenderingManager</text>
+        <rect class="sub" x="278" y="82" width="164" height="28"></rect>
+        <text class="txt" x="292" y="101">Mask_Object</text>
+        <rect class="sub" x="278" y="118" width="164" height="28"></rect>
+        <text class="txt" x="292" y="137">Mask_Static</text>
+        <rect class="sub" x="278" y="154" width="164" height="28"></rect>
+        <text class="txt" x="292" y="173">Actor/player/terrain</text>
+
+        <rect class="box" x="520" y="45" width="190" height="130"></rect>
+        <text class="title" x="540" y="78">ShadowManager</text>
+        <text class="txt" x="540" y="107">chooses technique</text>
+        <text class="txt" x="540" y="129">sets textures/uniforms</text>
+        <text class="txt" x="540" y="151">sets traversal mask</text>
+
+        <rect class="box" x="770" y="20" width="190" height="115"></rect>
+        <text class="title" x="790" y="52">Stable CSM</text>
+        <text class="txt" x="790" y="80">frustum splits</text>
+        <text class="txt" x="790" y="102">ortho + texel snap</text>
+
+        <rect class="box" x="770" y="185" width="190" height="105"></rect>
+        <text class="title" x="790" y="218">Legacy VDSM</text>
+        <text class="txt" x="790" y="246">existing fallback</text>
+        <text class="txt" x="790" y="268">view-dependent fit</text>
+
+        <rect class="box" x="520" y="235" width="190" height="90"></rect>
+        <text class="title" x="540" y="266">Receiver shader</text>
+        <text class="txt" x="540" y="294">sample valid cascade</text>
+        <text class="txt" x="540" y="314">XY and Z in range</text>
+
+        <path class="line" d="M 200 110 L 260 110"></path>
+        <path class="line" d="M 460 110 L 520 110"></path>
+        <path class="line" d="M 710 98 C 735 78 748 72 770 72"></path>
+        <path class="line" d="M 710 132 C 740 178 748 220 770 232"></path>
+        <path class="line" d="M 865 135 C 852 172 772 244 710 276"></path>
+        <path class="line" d="M 865 185 C 850 174 764 230 710 276"></path>
+      </svg>
+    </div>
+
+    <h3>Mask Split In Plain Terms</h3>
+    <p>
+      Before this sprint, exterior <code>object shadows = true</code> pulled in both ordinary objects and paged static
+      exterior chunks. In dense cities that means the shadow pass may traverse and draw large amounts of world geometry.
+      Now nearby active-grid paged statics count as object casters, while far/merged paged statics remain independent:
+    </p>
+    <pre><code>[Shadows]
+object shadows = true
+static object shadows = false</code></pre>
+    <p>
+      This preserves useful nearby rock/clutter/object shadows while keeping heavy distant static city geometry out of
+      the default shadow caster set.
+    </p>
+  </section>
+
+  <section id="stable-csm">
+    <h2>Stable CSM</h2>
+    <p>
+      The new path computes cascades from the camera frustum, fits each cascade to a stable bounding volume, builds a
+      directional-light orthographic projection, and snaps the light-space center to the shadow map texel grid. The goal
+      is less shadow swimming while rotating or moving the camera.
+    </p>
+
+    <div class="svg-wrap">
+      <svg viewBox="0 0 980 430" role="img" aria-label="Stable CSM cascade construction diagram">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5a2b"></path>
+          </marker>
+          <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse">
+            <path d="M 14 0 L 0 0 0 14" fill="none" stroke="#c7d3d8" stroke-width="1"></path>
+          </pattern>
+          <style>
+            .cam { fill: #263842; }
+            .c0 { fill: #74b7d3; fill-opacity: 0.5; stroke: #236f8e; stroke-width: 2; }
+            .c1 { fill: #dfb46b; fill-opacity: 0.48; stroke: #9a6a16; stroke-width: 2; }
+            .c2 { fill: #a7c987; fill-opacity: 0.5; stroke: #287a50; stroke-width: 2; }
+            .label { fill: #1f2a32; font: 700 16px Segoe UI, Arial, sans-serif; }
+            .body { fill: #43515a; font: 13px Segoe UI, Arial, sans-serif; }
+            .sun { stroke: #8b5a2b; stroke-width: 3; marker-end: url(#arrow2); }
+          </style>
+        </defs>
+
+        <text class="label" x="28" y="34">Camera frustum split into stable cascades</text>
+        <polygon class="cam" points="52,216 82,198 82,234"></polygon>
+        <line x1="82" y1="198" x2="510" y2="80" stroke="#596b74" stroke-width="2"></line>
+        <line x1="82" y1="234" x2="510" y2="350" stroke="#596b74" stroke-width="2"></line>
+        <polygon class="c0" points="88,199 185,172 185,260 88,234"></polygon>
+        <polygon class="c1" points="185,172 325,133 325,298 185,260"></polygon>
+        <polygon class="c2" points="325,133 510,80 510,350 325,298"></polygon>
+        <text class="label" x="108" y="226">0</text>
+        <text class="label" x="246" y="226">1</text>
+        <text class="label" x="408" y="226">2</text>
+        <text class="body" x="94" y="286">near, high detail</text>
+        <text class="body" x="248" y="324">mid</text>
+        <text class="body" x="402" y="378">far, stable coverage</text>
+
+        <line class="sun" x1="630" y1="70" x2="555" y2="145"></line>
+        <line class="sun" x1="665" y1="88" x2="590" y2="163"></line>
+        <line class="sun" x1="700" y1="106" x2="625" y2="181"></line>
+        <text class="label" x="632" y="46">sun direction</text>
+
+        <rect x="600" y="220" width="240" height="150" fill="url(#grid)" stroke="#9fb3bc" stroke-width="2" rx="8"></rect>
+        <circle cx="716" cy="292" r="46" fill="#74b7d3" fill-opacity="0.45" stroke="#236f8e" stroke-width="2"></circle>
+        <path d="M 716 292 L 744 292 L 744 264" fill="none" stroke="#236f8e" stroke-width="3"></path>
+        <text class="label" x="612" y="405">light-space center snaps to texel grid</text>
+        <text class="body" x="612" y="388">world units per texel = cascade diameter / resolution</text>
+      </svg>
+    </div>
+
+    <h3>Selectable Fallback</h3>
+    <pre><code>[Shadows]
+shadow mapping method = stable csm
+
+# fallback:
+# shadow mapping method = legacy vdsm</code></pre>
+
+    <p>
+      Stable CSM currently reuses the existing shadow texture/uniform contract. That keeps shader churn low and lets the
+      legacy path remain as a direct fallback if the prototype shows visual issues in specific scenes.
+    </p>
+  </section>
+
+  <section id="ao">
+    <h2>Contact AO</h2>
+    <p>
+      Contact AO is intentionally small and practical. It uses postprocess depth, normals, world position, and a short
+      sample pattern to darken tight contact areas near the camera. It should help ground clutter, actor feet, rocks,
+      crates, barrels, steps, and building-ground contact lines without asking every static object to cast real-time
+      shadows.
+    </p>
+
+    <div class="svg-wrap">
+      <svg viewBox="0 0 980 300" role="img" aria-label="Contact AO diagram">
+        <defs>
+          <radialGradient id="aoGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#17232b" stop-opacity="0.55"></stop>
+            <stop offset="65%" stop-color="#17232b" stop-opacity="0.16"></stop>
+            <stop offset="100%" stop-color="#17232b" stop-opacity="0"></stop>
+          </radialGradient>
+          <style>
+            .ground { fill: #d7d0bf; stroke: #9d9481; stroke-width: 2; }
+            .obj { fill: #7fa5b4; stroke: #355565; stroke-width: 3; }
+            .tap { stroke: #236f8e; stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+            .aoText { fill: #1f2a32; font: 700 16px Segoe UI, Arial, sans-serif; }
+            .aoBody { fill: #43515a; font: 13px Segoe UI, Arial, sans-serif; }
+          </style>
+        </defs>
+
+        <rect class="ground" x="60" y="210" width="860" height="28" rx="4"></rect>
+        <ellipse cx="288" cy="211" rx="120" ry="34" fill="url(#aoGrad)"></ellipse>
+        <rect class="obj" x="235" y="120" width="106" height="90" rx="6"></rect>
+        <path class="tap" d="M 288 207 C 250 183 242 158 234 132"></path>
+        <path class="tap" d="M 288 207 C 306 177 315 151 324 125"></path>
+        <path class="tap" d="M 288 207 C 334 197 365 188 394 178"></path>
+        <path class="tap" d="M 288 207 C 246 210 208 212 168 214"></path>
+        <text class="aoText" x="470" y="116">Depth + normal rejection</text>
+        <text class="aoBody" x="470" y="146">Short radius samples detect nearby occluders.</text>
+        <text class="aoBody" x="470" y="170">Distance fade keeps the pass subtle outdoors.</text>
+        <text class="aoBody" x="470" y="194">This complements shadows; it does not replace large building shadows.</text>
+      </svg>
+    </div>
+
+    <pre><code>[Shadows]
+enable ambient occlusion = true
+ao method = contact
+ao radius = 90.0
+ao strength = 0.65
+ao sample count = 8
+ao fade distance = 4096</code></pre>
+  </section>
+
+  <section id="perf">
+    <h2>Perf Baseline</h2>
+    <p>
+      The sprint doc identified shadow rendering as the Old Ebonheart bottleneck. The important signal is that removing
+      object/static shadow casters nearly reaches the no-shadow baseline.
+    </p>
+
+    <div class="svg-wrap">
+      <svg viewBox="0 0 980 360" role="img" aria-label="Old Ebonheart FPS baseline chart">
+        <style>
+          .axis { stroke: #9fb3bc; stroke-width: 1; }
+          .bar1 { fill: #7b536e; }
+          .bar2 { fill: #9a6a16; }
+          .bar3 { fill: #236f8e; }
+          .bar4 { fill: #287a50; }
+          .bar5 { fill: #4f6f7c; }
+          .chartText { fill: #1f2a32; font: 14px Segoe UI, Arial, sans-serif; }
+          .chartLabel { fill: #1f2a32; font: 700 14px Segoe UI, Arial, sans-serif; }
+          .mutedText { fill: #5d6a72; font: 12px Segoe UI, Arial, sans-serif; }
+        </style>
+        <text class="chartLabel" x="24" y="30">Average FPS from sprint smoke tests</text>
+        <line class="axis" x1="290" y1="56" x2="290" y2="310"></line>
+        <line class="axis" x1="290" y1="310" x2="820" y2="310"></line>
+        <text class="mutedText" x="290" y="332">0</text>
+        <text class="mutedText" x="550" y="332">30</text>
+        <text class="mutedText" x="805" y="332">60</text>
+
+        <text class="chartText" x="24" y="78">All shadows, 4096</text>
+        <rect class="bar1" x="290" y="60" width="316" height="28" rx="4"></rect>
+        <text class="chartLabel" x="616" y="80">36.5</text>
+
+        <text class="chartText" x="24" y="124">2x2048, distance 8192</text>
+        <rect class="bar2" x="290" y="106" width="338" height="28" rx="4"></rect>
+        <text class="chartLabel" x="638" y="126">39.0</text>
+
+        <text class="chartText" x="24" y="170">2x1024, distance 4096</text>
+        <rect class="bar3" x="290" y="152" width="381" height="28" rx="4"></rect>
+        <text class="chartLabel" x="681" y="172">44.0</text>
+
+        <text class="chartText" x="24" y="216">2x2048, no object shadows</text>
+        <rect class="bar4" x="290" y="198" width="479" height="28" rx="4"></rect>
+        <text class="chartLabel" x="779" y="218">55.3</text>
+
+        <text class="chartText" x="24" y="262">No shadows</text>
+        <rect class="bar5" x="290" y="244" width="501" height="28" rx="4"></rect>
+        <text class="chartLabel" x="801" y="264">57.8</text>
+      </svg>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Variant</th>
+          <th>Average FPS</th>
+          <th>Frame Time</th>
+          <th>Render</th>
+          <th>Cull</th>
+          <th>GPU</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>All shadows, 4096</td>
+          <td>~36.5</td>
+          <td>~29.1 ms</td>
+          <td>~23.3 ms</td>
+          <td>~14.9 ms</td>
+          <td>~24.4 ms</td>
+        </tr>
+        <tr>
+          <td>2x2048, distance 8192</td>
+          <td>~39.0</td>
+          <td>~25.9 ms</td>
+          <td>~20.3 ms</td>
+          <td>~12.8 ms</td>
+          <td>~21.4 ms</td>
+        </tr>
+        <tr>
+          <td>2x1024, distance 4096</td>
+          <td>~44.0</td>
+          <td>~23.0 ms</td>
+          <td>~17.3 ms</td>
+          <td>~11.3 ms</td>
+          <td>~18.4 ms</td>
+        </tr>
+        <tr>
+          <td>2x2048, no object shadows</td>
+          <td>~55.3</td>
+          <td>~18.5 ms</td>
+          <td>~12.9 ms</td>
+          <td>~8.7 ms</td>
+          <td>~14.6 ms</td>
+        </tr>
+        <tr>
+          <td>No shadows</td>
+          <td>~57.8</td>
+          <td>~17.7 ms</td>
+          <td>~11.9 ms</td>
+          <td>~8.1 ms</td>
+          <td>~14.3 ms</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="commands">
+    <h2>PowerShell Commands</h2>
+    <div class="note warning">
+      Operational note: run compiles from PowerShell yourself. Avoid launching OpenMW CMake/Ninja builds through
+      Codex/WSL, because Windows/WSL may retain build memory until the shell or WSL VM is restarted.
+    </div>
+    <p>
+      Run these from a regular PowerShell prompt on Windows. The commands assume the repo is at
+      <code>D:\data\code\openmw</code>.
+    </p>
+
+    <h3>Preflight</h3>
+    <pre><code>Set-Location D:\data\code\openmw
+git branch --show-current
+git status --short</code></pre>
+
+    <h3>Try A Fresh Build</h3>
+    <pre><code>Set-Location D:\data\code\openmw
+&amp; "C:\Program Files\CMake\bin\cmake.exe" --build .\MSVC2022_64_Ninja --config RelWithDebInfo --target openmw --parallel 6</code></pre>
+
+    <h3>Fast Incremental Builds</h3>
+    <pre><code># Launcher UI only
+cmd /c "call MSVC2022_64_Ninja\ActivateMSVC.bat &amp;&amp; cmake --build MSVC2022_64_Ninja --parallel --config Release --target openmw-launcher"
+
+# Game executable only
+cmd /c "call MSVC2022_64_Ninja\ActivateMSVC.bat &amp;&amp; cmake --build MSVC2022_64_Ninja --parallel --config Release --target openmw"
+
+# Existing repo helper, now targeted to game + launcher instead of the full all target
+.\fastcompile.bat</code></pre>
+
+    <p>
+      If that configuration does not produce <code>RelWithDebInfo\openmw.exe</code>, build Release instead:
+    </p>
+    <pre><code>&amp; "C:\Program Files\CMake\bin\cmake.exe" --build .\MSVC2022_64_Ninja --config Release --target openmw --parallel 6</code></pre>
+
+    <h3>If Build Stops On Bullet</h3>
+    <pre><code>Select-String -Path .\MSVC2022_64_Ninja\CMakeCache.txt -Pattern "OPENMW_USE_SYSTEM_BULLET|BULLET_INCLUDE_DIR|BULLET.*LIBRARY|BT_USE_DOUBLE"</code></pre>
+
+    <p class="small">
+      Send the output if it still says Bullet is not double precision. The shadow code did not reach compile during my
+      full build attempt because CMake stopped at that dependency check.
+    </p>
+
+    <h3>Find The Fresh Executable</h3>
+    <pre><code>Get-ChildItem .\MSVC2022_64_Ninja -Recurse -Filter openmw.exe |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object FullName, LastWriteTime</code></pre>
+
+    <h3>Open The User Settings</h3>
+    <pre><code>$configDir = Join-Path ([environment]::GetFolderPath("mydocuments")) "My Games\OpenMW"
+$settings = Join-Path $configDir "settings.cfg"
+Copy-Item $settings "$settings.shadow-sprint-backup" -Force
+notepad $settings</code></pre>
+
+    <p>
+      In <code>[Shadows]</code>, make sure each key appears once for the profile you are testing. Start with this
+      default sprint profile:
+    </p>
+    <pre><code>[Shadows]
+enable shadows = true
+shadow mapping method = stable csm
+stable csm cascades = 3
+stable csm resolution = 2048
+stable csm distance = 8192
+stable csm split lambda = 0.65
+stable csm texel snapping = true
+stable csm update interval = 3
+stable csm sun update angle threshold = 1.0
+object shadows = true
+static object shadows = false
+shadow small feature culling = true
+shadow small feature culling pixel size = 4.0
+enable shadow cascade stats = true
+enable ambient occlusion = true
+ao method = contact
+ao radius = 90.0
+ao strength = 0.65
+ao sample count = 8
+ao fade distance = 4096</code></pre>
+
+    <h3>Run With OSG Stats Capture</h3>
+    <pre><code>Set-Location D:\data\code\openmw
+$env:OPENMW_OSG_STATS_FILE = "$PWD\oe_stable_static_off_ao_on.csv"
+.\MSVC2022_64_Ninja\RelWithDebInfo\openmw.exe</code></pre>
+
+    <p>
+      If you built Release instead, replace the last line with:
+    </p>
+    <pre><code>.\MSVC2022_64_Ninja\Release\openmw.exe</code></pre>
+
+    <h3>Collect Logs After A Run</h3>
+    <pre><code>$configDir = Join-Path ([environment]::GetFolderPath("mydocuments")) "My Games\OpenMW"
+$log = Join-Path $configDir "openmw.log"
+Select-String -Path $log -Pattern "Shadow cascade|Stable CSM|OSG stats will be written" | Select-Object -Last 200
+Copy-Item $log .\oe_openmw.log -Force
+Get-ChildItem .\oe_*.csv, .\oe_openmw.log | Select-Object FullName, Length, LastWriteTime</code></pre>
+
+    <h3>Bundle Results</h3>
+    <pre><code>Compress-Archive -Force -Path .\oe_*.csv, .\oe_openmw.log -DestinationPath .\morraiwind_shadow_ao_smoke.zip</code></pre>
+  </section>
+
+  <section id="tests">
+    <h2>Smoke Test Matrix</h2>
+    <p>
+      Use the same save, same Old Ebonheart location, same weather/time if possible. For each profile: wait until
+      streaming settles, stand still 10 seconds, do one slow 360 degree pan, do one short strafe, then quit.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Settings Delta</th>
+          <th>Stats Filename</th>
+          <th>Question It Answers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Stable default</td>
+          <td>
+            <code>shadow mapping method = stable csm</code>,
+            <code>static object shadows = false</code>,
+            <code>enable ambient occlusion = true</code>
+          </td>
+          <td><code>oe_stable_static_off_ao_on.csv</code></td>
+          <td>Does the intended default feel stable and fast?</td>
+        </tr>
+        <tr>
+          <td>Stable, AO off</td>
+          <td>Same as above, but <code>enable ambient occlusion = false</code></td>
+          <td><code>oe_stable_static_off_ao_off.csv</code></td>
+          <td>What is the isolated AO cost?</td>
+        </tr>
+        <tr>
+          <td>Stable, static on</td>
+          <td>Same as default, but <code>static object shadows = true</code></td>
+          <td><code>oe_stable_static_on.csv</code></td>
+          <td>How expensive are paged static casters on the new path?</td>
+        </tr>
+        <tr>
+          <td>Legacy all casters</td>
+          <td>
+            <code>shadow mapping method = legacy vdsm</code>,
+            <code>object shadows = true</code>,
+            <code>static object shadows = true</code>,
+            <code>enable ambient occlusion = false</code>
+          </td>
+          <td><code>oe_legacy_all.csv</code></td>
+          <td>How does the old fallback compare after the split?</td>
+        </tr>
+        <tr>
+          <td>No shadows</td>
+          <td><code>enable shadows = false</code></td>
+          <td><code>oe_no_shadows.csv</code></td>
+          <td>What is the current scene baseline?</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      Acceptance target for the first pass: stable CSM with static casters off should land much closer to the old
+      "2x2048, no object shadows" result (~55.3 FPS) than the old "all shadows" result (~36.5 FPS), while preserving
+      actor/player/terrain shadows and avoiding obvious cascade swimming.
+    </div>
+  </section>
+
+  <section id="combat-stall">
+    <h2>Combat Stall Investigation</h2>
+    <p>
+      Current read: the direct hit-registration path is bounded. The likely failure mode is a hit-triggered phase
+      change that fans out into AI/pathfinding, Lua hit handlers, or transient combat VFX. Spell particles and VFX use
+      <code>Mask_Effect</code>/<code>Mask_ParticleSystem</code>, while the new shadow caster mask does not include those
+      masks, so VFX should not become shadow casters directly.
+    </p>
+
+    <div class="grid">
+      <article class="card">
+        <h3>Added Runtime Counters</h3>
+        <p>
+          F4/resource stats and OSG stats now include free world effects, projectile counts, combat engagement checks,
+          siding-cache misses, forced flee, path builds, pathgrid fallbacks, navigator failures, and cumulative path build
+          milliseconds.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Most Useful First Test</h3>
+        <p>
+          Reproduce save 77 once with stats capture. If <code>AI Path Build ms</code>, <code>AI Navigator Failures</code>,
+          or <code>AI Combat ForceFlee</code> jumps when the stall starts, the culprit is likely AI/pathfinding. If
+          <code>Rendering Free Effects</code>, <code>Projectiles MagicBolts</code>, Lua memory, or resource caches climb,
+          focus on VFX/Lua/resource churn.
+        </p>
+      </article>
+    </div>
+
+    <h3>Save 77 Capture Command</h3>
+    <pre><code>$repo = "D:\data\code\openmw"
+$omw = Join-Path ([environment]::GetFolderPath("mydocuments")) "My Games\OpenMW"
+$save = Get-ChildItem "$omw\saves" -Recurse -Filter "*.omwsave" |
+  Where-Object { $_.Name -match "77" } |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 1 -ExpandProperty FullName
+
+$env:OPENMW_DEBUG_LEVEL = "INFO"
+$env:OPENMW_OSG_STATS_FILE = Join-Path $omw "save77-osg-stats.txt"
+$env:OPENMW_OSG_STATS_LIST = "times;resource;viewerobjects;cameraobjects"
+
+&amp; "$repo\MSVC2022_64_Ninja\Release\openmw.exe" --load-savegame "$save" --no-grab</code></pre>
+
+    <h3>Isolation Toggles</h3>
+    <p>
+      Use one at a time in <code>Documents\My Games\OpenMW\settings.cfg</code>: disable AO, disable shadows, compare
+      stable CSM with legacy VDSM, set <code>[Water] reflection detail = 2</code>, or disable post-processing. Keep
+      <code>enable shadow cascade stats</code> off for normal play; enable it only for short captures.
+    </p>
+  </section>
+
+  <section id="risks">
+    <h2>Risks And Review Points</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Risk</th>
+          <th>What To Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Stable CSM fit</td>
+          <td>First runtime build may show cascade coverage, clipping, or precision issues.</td>
+          <td>Rotate slowly, look toward/away from the sun, inspect terrain and actor shadows at split boundaries.</td>
+        </tr>
+        <tr>
+          <td>Shader compatibility</td>
+          <td>Contact AO and stable shadow sampling need real GLSL compile coverage on the target renderer.</td>
+          <td>Check <code>openmw.log</code> for shader compile errors and toggle AO on/off.</td>
+        </tr>
+        <tr>
+          <td>Performance attribution</td>
+          <td>Cascade cull logs are CPU-side; OSG stats provide broader render/cull/GPU frame timing.</td>
+          <td>Use both <code>enable shadow cascade stats</code> and <code>OPENMW_OSG_STATS_FILE</code>.</td>
+        </tr>
+        <tr>
+          <td>Dependency state</td>
+          <td>The current CMake cache points at a Bullet setup that fails the double-precision requirement.</td>
+          <td>Resolve Bullet/reconfigure before trusting runtime results from an older executable.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

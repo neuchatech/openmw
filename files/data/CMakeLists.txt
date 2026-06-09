@@ -166,6 +166,7 @@ set(BUILTIN_DATA_FILES
     
     shaders/adjustments.omwfx
     shaders/bloomlinear.omwfx
+    shaders/contactao.omwfx
     shaders/debug.omwfx
     shaders/internal_distortion.omwfx
 

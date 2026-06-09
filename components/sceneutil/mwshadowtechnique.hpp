@@ -88,6 +88,10 @@ namespace SceneUtil {
 
         virtual void disableFrontFaceCulling();
 
+        virtual void setShadowSmallFeatureCulling(bool enabled, float pixelSize);
+
+        virtual void setCascadeStatsEnabled(bool enabled);
+
         virtual void setupCastingShader(Shader::ShaderManager &shaderManager);
 
         class ComputeLightSpaceBounds : public osg::NodeVisitor, public osg::CullStack
@@ -224,6 +228,7 @@ namespace SceneUtil {
 
         protected:
             friend class MWShadowTechnique;
+            friend class StableShadowTechnique;
             virtual ~ViewDependentData() {}
 
             MWShadowTechnique*          _viewDependentShadowMap;
@@ -273,6 +278,8 @@ namespace SceneUtil {
 
         osg::ref_ptr<osg::StateSet> getOrCreateShadowsBinStateSet();
 
+        void applyShadowCameraCullingSettings(osg::Camera& camera) const;
+
     protected:
         virtual ~MWShadowTechnique();
 
@@ -304,6 +311,10 @@ namespace SceneUtil {
         float                                   _polygonOffsetUnits = 4.0f;
 
         bool                                    _useFrontFaceCulling = true;
+
+        bool                                    _shadowSmallFeatureCulling = false;
+        float                                   _shadowSmallFeatureCullingPixelSize = 4.0f;
+        bool                                    _cascadeStatsEnabled = false;
 
         float                                   _shadowFadeStart = 0.0f;
 

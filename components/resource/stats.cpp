@@ -73,9 +73,9 @@ namespace Resource
                 "Physics HeightFields",
                 "",
                 "Lua UsedMemory",
-                "",
-                "",
-                "",
+                "Rendering Free Effects",
+                "Projectiles Arrows",
+                "Projectiles MagicBolts",
             };
 
             static_assert(std::size(firstPage) == itemsPerPage);
@@ -94,6 +94,19 @@ namespace Resource
                 "Terrain Texture",
                 "Land",
                 "Blending Rules",
+            };
+
+            constexpr std::string_view ai[] = {
+                "AI Engage Checks",
+                "AI Siding Cache Misses",
+                "AI StartCombat",
+                "AI Combat Player Checks",
+                "AI Combat ForceFlee",
+                "AI Flee Pathgrid Scans",
+                "AI Path Builds",
+                "AI Pathgrid Fallbacks",
+                "AI Navigator Failures",
+                "AI Path Build ms",
             };
 
             constexpr std::string_view cellPreloader[] = {
@@ -129,6 +142,9 @@ namespace Resource
             std::vector<std::string> statNames;
 
             for (std::string_view name : firstPage)
+                statNames.emplace_back(name);
+
+            for (std::string_view name : ai)
                 statNames.emplace_back(name);
 
             for (std::size_t i = 0; i < std::size(caches); ++i)

@@ -257,6 +257,7 @@ namespace MWRender
         bool mExteriorFlag = false;
         bool mNormalsSupported = false;
         bool mPrevPassLights = false;
+        bool mContactAoInjected = false;
 
         int mGLSLVersion;
         int mWidth;

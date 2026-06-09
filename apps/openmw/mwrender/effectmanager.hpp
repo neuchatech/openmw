@@ -11,6 +11,7 @@
 namespace osg
 {
     class Group;
+    class Stats;
     class Vec3f;
     class PositionAttitudeTransform;
 }
@@ -41,6 +42,8 @@ namespace MWRender
         void removeEffect(std::string_view effectId);
 
         void update(float dt);
+
+        void reportStats(unsigned int frameNumber, osg::Stats& stats) const;
 
         /// Remove all effects
         void clear();

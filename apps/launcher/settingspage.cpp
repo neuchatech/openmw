@@ -218,7 +218,15 @@ bool Launcher::SettingsPage::loadSettings()
         loadSettingBool(Settings::shadows().mPlayerShadows, *playerShadowsCheckBox);
         loadSettingBool(Settings::shadows().mTerrainShadows, *terrainShadowsCheckBox);
         loadSettingBool(Settings::shadows().mObjectShadows, *objectShadowsCheckBox);
+        loadSettingBool(Settings::shadows().mStaticObjectShadows, *staticObjectShadowsCheckBox);
         loadSettingBool(Settings::shadows().mEnableIndoorShadows, *indoorShadowsCheckBox);
+        loadSettingBool(Settings::shadows().mStableCsmTexelSnapping, *stableCsmTexelSnappingCheckBox);
+        loadSettingBool(Settings::shadows().mShadowSmallFeatureCulling, *shadowSmallFeatureCullingCheckBox);
+        loadSettingBool(Settings::shadows().mEnableShadowCascadeStats, *shadowCascadeStatsCheckBox);
+        loadSettingBool(Settings::shadows().mEnableAmbientOcclusion, *ambientOcclusionCheckBox);
+
+        const auto& shadowMappingMethod = Settings::shadows().mShadowMappingMethod.get();
+        shadowMappingMethodComboBox->setCurrentIndex(shadowMappingMethod == "legacy vdsm" ? 1 : 0);
 
         const auto& boundMethod = Settings::shadows().mComputeSceneBounds.get();
         if (boundMethod == "bounds")
@@ -250,6 +258,24 @@ bool Launcher::SettingsPage::loadSettings()
             shadowResolutionComboBox->addItem(QString::number(shadowRes));
             shadowResolutionComboBox->setCurrentIndex(shadowResolutionComboBox->count() - 1);
         }
+
+        stableCsmCascadesSpinBox->setValue(Settings::shadows().mStableCsmCascades);
+        const int stableCsmResolution = Settings::shadows().mStableCsmResolution;
+        int stableCsmResolutionIndex = stableCsmResolutionComboBox->findText(QString::number(stableCsmResolution));
+        if (stableCsmResolutionIndex != -1)
+            stableCsmResolutionComboBox->setCurrentIndex(stableCsmResolutionIndex);
+        else
+        {
+            stableCsmResolutionComboBox->addItem(QString::number(stableCsmResolution));
+            stableCsmResolutionComboBox->setCurrentIndex(stableCsmResolutionComboBox->count() - 1);
+        }
+        stableCsmDistanceSpinBox->setValue(static_cast<int>(std::round(Settings::shadows().mStableCsmDistance.get())));
+        stableCsmSplitLambdaSpinBox->setValue(Settings::shadows().mStableCsmSplitLambda);
+        stableCsmUpdateIntervalSpinBox->setValue(Settings::shadows().mStableCsmUpdateInterval);
+        stableCsmSunUpdateAngleThresholdSpinBox->setValue(Settings::shadows().mStableCsmSunUpdateAngleThreshold);
+        aoRadiusSpinBox->setValue(Settings::shadows().mAoRadius);
+        aoStrengthSpinBox->setValue(Settings::shadows().mAoStrength);
+        aoSampleCountSpinBox->setValue(Settings::shadows().mAoSampleCount);
 
         connect(shadowDistanceCheckBox, &QCheckBox::toggled, this, &SettingsPage::slotShadowDistLimitToggled);
 
@@ -434,14 +460,16 @@ void Launcher::SettingsPage::saveSettings()
 
         const bool cActorShadows = actorShadowsCheckBox->checkState() != Qt::Unchecked;
         const bool cObjectShadows = objectShadowsCheckBox->checkState() != Qt::Unchecked;
+        const bool cStaticObjectShadows = staticObjectShadowsCheckBox->checkState() != Qt::Unchecked;
         const bool cTerrainShadows = terrainShadowsCheckBox->checkState() != Qt::Unchecked;
         const bool cPlayerShadows = playerShadowsCheckBox->checkState() != Qt::Unchecked;
-        if (cActorShadows || cObjectShadows || cTerrainShadows || cPlayerShadows)
+        if (cActorShadows || cObjectShadows || cStaticObjectShadows || cTerrainShadows || cPlayerShadows)
         {
             Settings::shadows().mEnableShadows.set(true);
             Settings::shadows().mActorShadows.set(cActorShadows);
             Settings::shadows().mPlayerShadows.set(cPlayerShadows);
             Settings::shadows().mObjectShadows.set(cObjectShadows);
+            Settings::shadows().mStaticObjectShadows.set(cStaticObjectShadows);
             Settings::shadows().mTerrainShadows.set(cTerrainShadows);
         }
         else
@@ -450,6 +478,7 @@ void Launcher::SettingsPage::saveSettings()
             Settings::shadows().mActorShadows.set(false);
             Settings::shadows().mPlayerShadows.set(false);
             Settings::shadows().mObjectShadows.set(false);
+            Settings::shadows().mStaticObjectShadows.set(false);
             Settings::shadows().mTerrainShadows.set(false);
         }
 
@@ -463,6 +492,24 @@ void Launcher::SettingsPage::saveSettings()
             Settings::shadows().mComputeSceneBounds.set("primitives");
         else
             Settings::shadows().mComputeSceneBounds.set("none");
+
+        Settings::shadows().mShadowMappingMethod.set(
+            shadowMappingMethodComboBox->currentIndex() == 1 ? "legacy vdsm" : "stable csm");
+        Settings::shadows().mStableCsmCascades.set(stableCsmCascadesSpinBox->value());
+        Settings::shadows().mStableCsmResolution.set(stableCsmResolutionComboBox->currentText().toInt());
+        Settings::shadows().mStableCsmDistance.set(stableCsmDistanceSpinBox->value());
+        Settings::shadows().mStableCsmSplitLambda.set(stableCsmSplitLambdaSpinBox->value());
+        Settings::shadows().mStableCsmTexelSnapping.set(stableCsmTexelSnappingCheckBox->checkState() != Qt::Unchecked);
+        Settings::shadows().mStableCsmUpdateInterval.set(stableCsmUpdateIntervalSpinBox->value());
+        Settings::shadows().mStableCsmSunUpdateAngleThreshold.set(stableCsmSunUpdateAngleThresholdSpinBox->value());
+        Settings::shadows().mShadowSmallFeatureCulling.set(
+            shadowSmallFeatureCullingCheckBox->checkState() != Qt::Unchecked);
+        Settings::shadows().mEnableShadowCascadeStats.set(shadowCascadeStatsCheckBox->checkState() != Qt::Unchecked);
+        Settings::shadows().mEnableAmbientOcclusion.set(ambientOcclusionCheckBox->checkState() != Qt::Unchecked);
+        Settings::shadows().mAoMethod.set("contact");
+        Settings::shadows().mAoRadius.set(aoRadiusSpinBox->value());
+        Settings::shadows().mAoStrength.set(aoStrengthSpinBox->value());
+        Settings::shadows().mAoSampleCount.set(aoSampleCountSpinBox->value());
     }
 
     // Audio

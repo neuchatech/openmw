@@ -1,6 +1,7 @@
 #include "effectmanager.hpp"
 
 #include <osg/PositionAttitudeTransform>
+#include <osg/Stats>
 
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
@@ -111,6 +112,11 @@ namespace MWRender
                                return remove;
                            }),
             mEffects.end());
+    }
+
+    void EffectManager::reportStats(unsigned int frameNumber, osg::Stats& stats) const
+    {
+        stats.setAttribute(frameNumber, "Rendering Free Effects", static_cast<double>(mEffects.size()));
     }
 
     void EffectManager::clear()

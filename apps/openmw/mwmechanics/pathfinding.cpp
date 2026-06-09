@@ -4,6 +4,7 @@
 #include <limits>
 
 #include <osg/io_utils>
+#include <osg/Timer>
 
 #include <components/debug/debuglog.hpp>
 #include <components/detournavigator/debug.hpp>
@@ -21,6 +22,7 @@
 #include "../mwworld/class.hpp"
 
 #include "actorutil.hpp"
+#include "aistats.hpp"
 #include "pathgrid.hpp"
 
 namespace
@@ -384,8 +386,10 @@ namespace MWMechanics
         const DetourNavigator::Flags flags, const DetourNavigator::AreaCosts& areaCosts, float endTolerance,
         PathType pathType, std::span<const osg::Vec3f> checkpoints)
     {
+        const osg::Timer_t pathBuildStart = osg::Timer::instance()->tick();
         mPath.clear();
         mCell = actor.getCell();
+        bool usedPathgridFallback = false;
 
         DetourNavigator::Status status = DetourNavigator::Status::NavMeshNotFound;
 
@@ -408,12 +412,17 @@ namespace MWMechanics
         }
 
         if (mPath.empty())
+        {
+            usedPathgridFallback = true;
             buildPathByPathgridImpl(startPoint, endPoint, pathgridGraph, std::back_inserter(mPath));
+        }
 
         if (status == DetourNavigator::Status::NavMeshNotFound && mPath.empty())
             mPath.push_back(endPoint);
 
         mConstructed = !mPath.empty();
+        AiStats::recordPathBuild(
+            osg::Timer::instance()->delta_m(pathBuildStart, osg::Timer::instance()->tick()), usedPathgridFallback);
     }
 
     DetourNavigator::Status PathFinder::buildPathByNavigatorImpl(const MWWorld::ConstPtr& actor,
@@ -432,6 +441,7 @@ namespace MWMechanics
 
         if (status != DetourNavigator::Status::Success)
         {
+            AiStats::recordNavigatorFailure();
             Log(Debug::Debug) << "Build path by navigator error: \"" << DetourNavigator::getMessage(status)
                               << "\" for \"" << actor.getClass().getName(actor) << "\" (" << actor.getBase()
                               << ") from " << startPoint << " to " << endPoint << " with flags ("

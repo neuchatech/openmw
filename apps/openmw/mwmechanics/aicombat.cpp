@@ -19,6 +19,7 @@
 #include "../mwbase/world.hpp"
 
 #include "actorutil.hpp"
+#include "aistats.hpp"
 #include "aicombataction.hpp"
 #include "character.hpp"
 #include "combat.hpp"
@@ -182,6 +183,8 @@ namespace MWMechanics
             return false;
 
         bool forceFlee = false;
+        if (target == MWMechanics::getPlayer())
+            AiStats::recordCombatPlayerCheck();
         if (!canFight(actor, target))
         {
             storage.stopAttack();
@@ -196,7 +199,10 @@ namespace MWMechanics
             if ((target == MWMechanics::getPlayer() || targetSidesWithPlayer)
                 && ((stats.getHitAttemptActorId() == target.getClass().getCreatureStats(target).getActorId())
                     || (target.getClass().getCreatureStats(target).getHitAttemptActorId() == stats.getActorId())))
+            {
                 forceFlee = true;
+                AiStats::recordCombatForceFlee();
+            }
             else // Otherwise end combat
                 return true;
         }
@@ -385,6 +391,7 @@ namespace MWMechanics
                     if (pathgrid != nullptr && !pathgrid->mPoints.empty()
                         && !actor.getClass().isPureWaterCreature(actor))
                     {
+                        AiStats::recordFleePathgridScan(pathgrid->mPoints.size());
                         ESM::Pathgrid::PointList points;
                         const Misc::CoordinateConverter coords
                             = Misc::makeCoordinateConverter(*storage.mCell->getCell());

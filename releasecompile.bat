@@ -35,8 +35,8 @@ echo Found "%vcvars%"
 call "%vcvars%"
 
 :build
-echo Building OpenMW (Release) from MSVC2022_64_Ninja...
-cmake --build MSVC2022_64_Ninja --parallel --config Release
+echo Building OpenMW and Launcher (Release) from MSVC2022_64_Ninja...
+cmake --build MSVC2022_64_Ninja --parallel --config Release --target openmw openmw-launcher
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ****************************************

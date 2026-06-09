@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <osg/PositionAttitudeTransform>
+#include <osg/Stats>
 
 #include <components/debug/debuglog.hpp>
 
@@ -625,6 +626,12 @@ namespace MWWorld
         mMagicBolts.erase(
             std::remove_if(mMagicBolts.begin(), mMagicBolts.end(), [](const State& state) { return state.mToDelete; }),
             mMagicBolts.end());
+    }
+
+    void ProjectileManager::reportStats(unsigned int frameNumber, osg::Stats& stats) const
+    {
+        stats.setAttribute(frameNumber, "Projectiles Arrows", static_cast<double>(mProjectiles.size()));
+        stats.setAttribute(frameNumber, "Projectiles MagicBolts", static_cast<double>(mMagicBolts.size()));
     }
 
     void ProjectileManager::cleanupProjectile(ProjectileManager::ProjectileState& state)

@@ -1,0 +1,116 @@
+uniform_float uRadius {
+    default = 90.0;
+    min = 0.0;
+    max = 300.0;
+    step = 1.0;
+    display_name = "Radius";
+    description = "Contact AO sampling radius in game units.";
+}
+
+uniform_float uStrength {
+    default = 0.65;
+    min = 0.0;
+    max = 2.0;
+    step = 0.01;
+    display_name = "Strength";
+    description = "Contact AO darkening strength.";
+}
+
+uniform_int uSampleCount {
+    default = 8;
+    min = 1;
+    max = 16;
+    step = 1;
+    display_name = "Samples";
+    description = "Number of contact AO taps.";
+}
+
+uniform_float uFadeDistance {
+    default = 4096.0;
+    min = 1.0;
+    max = 32768.0;
+    step = 32.0;
+    display_name = "Fade Distance";
+    description = "Distance where contact AO fades out.";
+}
+
+fragment main {
+
+    omw_In vec2 omw_TexCoord;
+
+    vec2 contactAOSampleDir(int index)
+    {
+        if (index == 0) return vec2(1.0, 0.0);
+        if (index == 1) return vec2(-1.0, 0.0);
+        if (index == 2) return vec2(0.0, 1.0);
+        if (index == 3) return vec2(0.0, -1.0);
+        if (index == 4) return vec2(0.7071, 0.7071);
+        if (index == 5) return vec2(-0.7071, 0.7071);
+        if (index == 6) return vec2(0.7071, -0.7071);
+        if (index == 7) return vec2(-0.7071, -0.7071);
+        if (index == 8) return vec2(0.3827, 0.9239);
+        if (index == 9) return vec2(-0.3827, 0.9239);
+        if (index == 10) return vec2(0.3827, -0.9239);
+        if (index == 11) return vec2(-0.3827, -0.9239);
+        if (index == 12) return vec2(0.9239, 0.3827);
+        if (index == 13) return vec2(-0.9239, 0.3827);
+        if (index == 14) return vec2(0.9239, -0.3827);
+        return vec2(-0.9239, -0.3827);
+    }
+
+    void main()
+    {
+        vec4 color = omw_GetLastShader(omw_TexCoord);
+
+#if OMW_NORMALS
+        float centerDepth = omw_GetLinearDepth(omw_TexCoord);
+        vec3 centerPos = omw_GetWorldPosFromUV(omw_TexCoord);
+        vec3 centerNormal = normalize(omw_GetNormalsWorldSpace(omw_TexCoord));
+
+        float pixelSize = max(omw.rcpResolution.x, omw.rcpResolution.y);
+        float screenRadius = clamp(uRadius / max(centerDepth, 1.0) * 0.15, pixelSize * 1.5, pixelSize * 20.0);
+
+        float occlusion = 0.0;
+        float taps = 0.0;
+        for (int i = 0; i < 16; ++i)
+        {
+            if (i >= uSampleCount)
+                break;
+
+            vec2 sampleUv = omw_TexCoord + contactAOSampleDir(i) * screenRadius;
+            if (sampleUv.x <= 0.0 || sampleUv.y <= 0.0 || sampleUv.x >= 1.0 || sampleUv.y >= 1.0)
+                continue;
+
+            vec3 samplePos = omw_GetWorldPosFromUV(sampleUv);
+            vec3 sampleVector = samplePos - centerPos;
+            float sampleDistance = length(sampleVector);
+            if (sampleDistance <= 0.001 || sampleDistance >= uRadius)
+                continue;
+
+            float normalFacing = clamp(dot(centerNormal, sampleVector / sampleDistance) + 0.25, 0.0, 1.0);
+            float range = 1.0 - smoothstep(uRadius * 0.25, uRadius, sampleDistance);
+            float depthReject = 1.0 - smoothstep(uRadius * 0.5, uRadius, abs(omw_GetLinearDepth(sampleUv) - centerDepth));
+            occlusion += normalFacing * range * depthReject;
+            taps += 1.0;
+        }
+
+        if (taps > 0.0)
+        {
+            occlusion /= taps;
+            float distanceFade = 1.0 - smoothstep(uFadeDistance * 0.5, uFadeDistance, centerDepth);
+            float fogFade = 1.0 - omw_EstimateFogCoverageFromUV(omw_TexCoord);
+            color.rgb *= 1.0 - clamp(occlusion * uStrength * distanceFade * fogFade, 0.0, 0.85);
+        }
+#endif
+
+        omw_FragColor = color;
+    }
+}
+
+technique {
+    description = "Small-radius contact ambient occlusion for grounding nearby objects.";
+    author = "OpenMW";
+    version = "1.0";
+    passes = main;
+    pass_normals = true;
+}
