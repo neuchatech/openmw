@@ -1557,8 +1557,6 @@ namespace MWRender
         unsigned int frameNumber = mViewer->getFrameStamp()->getFrameNumber();
         if (stats->collectStats("resource"))
         {
-            if (mEffectManager)
-                mEffectManager->reportStats(frameNumber, *stats);
             mTerrain->reportStats(frameNumber, stats);
         }
     }

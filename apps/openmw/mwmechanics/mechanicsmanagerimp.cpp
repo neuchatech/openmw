@@ -34,7 +34,6 @@
 #include "actor.hpp"
 #include "actors.hpp"
 #include "actorutil.hpp"
-#include "aistats.hpp"
 #include "aicombat.hpp"
 #include "aipursue.hpp"
 #include "autocalcspell.hpp"
@@ -1687,7 +1686,6 @@ namespace MWMechanics
     void MechanicsManager::startCombat(
         const MWWorld::Ptr& ptr, const MWWorld::Ptr& target, const std::set<MWWorld::Ptr>* targetAllies)
     {
-        AiStats::recordStartCombat();
         CreatureStats& stats = ptr.getClass().getCreatureStats(ptr);
 
         // Don't add duplicate packages nor add packages to dead actors.
@@ -2052,7 +2050,6 @@ namespace MWMechanics
     {
         stats.setAttribute(frameNumber, "Mechanics Actors", static_cast<double>(mActors.size()));
         stats.setAttribute(frameNumber, "Mechanics Objects", static_cast<double>(mObjects.size()));
-        AiStats::reportStats(frameNumber, stats);
     }
 
     int MechanicsManager::getGreetingTimer(const MWWorld::Ptr& ptr) const

@@ -27,7 +27,6 @@ namespace osg
 {
     class Group;
     class Quat;
-    class Stats;
 }
 
 namespace Resource
@@ -62,8 +61,6 @@ namespace MWWorld
         void update(float dt);
 
         void processHits();
-
-        void reportStats(unsigned int frameNumber, osg::Stats& stats) const;
 
         /// Removes all current projectiles. Should be called when switching to a new worldspace.
         void clear();

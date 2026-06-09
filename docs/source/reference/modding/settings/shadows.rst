@@ -26,7 +26,7 @@ Shadows Settings
    :title: shadow mapping method
    :type: string
    :range: legacy vdsm | stable csm
-   :default: stable csm
+   :default: legacy vdsm
    :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
 
    Selects the shadow mapping implementation.
@@ -130,8 +130,8 @@ Shadows Settings
    :default: true
    :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
 
-   Enable shadows cast by regular placed world objects and active-grid paged statics near the player.
-   Non-active-grid paged static exterior geometry is controlled separately by ``static object shadows``.
+   Enable shadows cast by regular placed world objects.
+   Paged exterior static geometry is controlled separately by ``static object shadows``.
    May reduce performance.
 
 .. omw-setting::
@@ -141,7 +141,7 @@ Shadows Settings
    :default: false
    :location: :bdg-success:`Launcher > Settings > Visuals > Shadows`
 
-   Enable shadows cast by non-active-grid paged static exterior geometry, such as merged building chunks.
+   Enable shadows cast by paged static exterior geometry, such as rocks, buildings, and merged chunks.
    This can be expensive in dense cities.
 
 .. omw-setting::
@@ -255,7 +255,7 @@ Shadows Settings
    :title: stable csm cascades
    :type: int
    :range: 1 to 8
-   :default: 3
+   :default: 2
 
    Number of cascades used by the stable CSM shadow path.
 
@@ -263,7 +263,7 @@ Shadows Settings
    :title: stable csm resolution
    :type: int
    :range: dependent on GPU/driver
-   :default: 2048
+   :default: 1024
 
    Shadow map resolution used by each stable CSM cascade.
 
@@ -271,7 +271,7 @@ Shadows Settings
    :title: stable csm distance
    :type: float32
    :range: > 0
-   :default: 8192
+   :default: 6144
 
    Maximum distance covered by stable CSM shadows.
 
@@ -313,7 +313,7 @@ Shadows Settings
    :title: enable ambient occlusion
    :type: boolean
    :range: true, false
-   :default: true
+   :default: false
 
    Enables the built-in contact ambient occlusion post-process.
 
@@ -321,7 +321,7 @@ Shadows Settings
    :title: ao method
    :type: string
    :range: contact | none
-   :default: contact
+   :default: none
 
    Selects the ambient occlusion method.
 

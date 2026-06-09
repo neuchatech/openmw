@@ -43,7 +43,6 @@
 
 #include "actor.hpp"
 #include "actorutil.hpp"
-#include "aistats.hpp"
 #include "aicombataction.hpp"
 #include "aifollow.hpp"
 #include "aipursue.hpp"
@@ -610,7 +609,6 @@ namespace MWMechanics
     void Actors::engageCombat(
         const MWWorld::Ptr& actor1, const MWWorld::Ptr& actor2, SidingCache& cachedAllies, bool againstPlayer) const
     {
-        AiStats::recordEngageCombatCheck();
         CreatureStats& creatureStats1 = actor1.getClass().getCreatureStats(actor1);
         if (creatureStats1.isDead() || creatureStats1.getAiSequence().isInCombat(actor2))
             return;
@@ -2477,7 +2475,6 @@ namespace MWMechanics
         auto search = mCache.find(actor);
         if (search != mCache.end())
             return search->second;
-        AiStats::recordSidingCacheMiss();
         std::set<MWWorld::Ptr>& out = mCache[actor];
         for (const MWWorld::Ptr& follower : mActors.getActorsSidingWith(actor, mExcludeInfighting))
         {
