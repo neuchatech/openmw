@@ -1197,7 +1197,7 @@
                <item row="16" column="0">
                 <widget class="QLabel" name="stableCsmSunUpdateAngleThresholdLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sun angle change in degrees required before stable CSM updates for sun movement. Higher values reduce thin-shadow flicker from tiny sun motion.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sun angle change in degrees that makes stable CSM refresh all cascades together instead of staggering them. Smaller sun movement still refreshes on the millisecond cadence.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Stable CSM Sun Update Angle</string>
@@ -1207,7 +1207,7 @@
                <item row="16" column="1">
                 <widget class="QDoubleSpinBox" name="stableCsmSunUpdateAngleThresholdSpinBox">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sun angle change in degrees required before stable CSM updates for sun movement. Higher values reduce thin-shadow flicker from tiny sun motion.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sun angle change in degrees that makes stable CSM refresh all cascades together instead of staggering them. Smaller sun movement still refreshes on the millisecond cadence.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="decimals">
                   <number>2</number>

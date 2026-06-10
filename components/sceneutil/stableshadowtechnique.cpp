@@ -378,11 +378,12 @@ namespace SceneUtil
                 continue;
             lightDir.normalize();
 
-            bool sunRefreshNeeded = !stableVdd->mLightDirValid;
-            if (stableVdd->mLightDirValid)
-                sunRefreshNeeded = angleDegrees(lightDir, stableVdd->mLightDir) > mSettings.mSunUpdateAngleThreshold;
+            const double sunAngleChange
+                = stableVdd->mLightDirValid ? angleDegrees(lightDir, stableVdd->mLightDir) : 180.0;
+            const bool sunMoved = !stableVdd->mLightDirValid || sunAngleChange > 0.0001;
+            const bool sunJumped = !stableVdd->mLightDirValid || sunAngleChange > mSettings.mSunUpdateAngleThreshold;
 
-            const bool refreshSunThisFrame = configChanged || (intervalElapsed && sunRefreshNeeded);
+            const bool refreshSunThisFrame = configChanged || (intervalElapsed && sunMoved);
             const osg::Vec3d effectiveLightDir
                 = refreshSunThisFrame || !stableVdd->mLightDirValid ? lightDir : stableVdd->mLightDir;
 
@@ -437,10 +438,11 @@ namespace SceneUtil
                 const bool cascadeShapeChanged = !cache.mValid || differs(cache.mDiameter, prepared.mDiameter)
                     || differs(cache.mNear, prepared.mNear) || differs(cache.mFar, prepared.mFar);
                 prepared.mRefreshRequested = !cache.mValid || configChanged
-                    || (intervalElapsed && (sunRefreshNeeded || centerChanged || cascadeShapeChanged));
+                    || (intervalElapsed && (sunMoved || centerChanged || cascadeShapeChanged));
             }
 
-            const bool refreshAllRequestedCascades = configChanged || !stableVdd->mRenderedOnce || sunRefreshNeeded;
+            const bool refreshAllRequestedCascades
+                = configChanged || !stableVdd->mRenderedOnce || (intervalElapsed && sunJumped);
             unsigned int selectedCascade = cascadeCount;
             if (!refreshAllRequestedCascades && intervalElapsed && cascadeCount > 0)
             {

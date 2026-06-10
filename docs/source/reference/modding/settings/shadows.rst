@@ -307,8 +307,8 @@ Shadows Settings
    :range: >= 0
    :default: 1.0
 
-   Sun angle change, in degrees, required before stable CSM refreshes for sun movement.
-   Higher values reduce thin-shadow flicker from tiny sun motion.
+   Sun angle change, in degrees, that makes stable CSM refresh all cascades together instead of staggering them.
+   Smaller sun movement still refreshes on the ``stable csm update interval ms`` cadence.
 
 .. omw-setting::
    :title: enable ambient occlusion
