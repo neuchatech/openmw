@@ -1168,7 +1168,7 @@
                <item row="15" column="0">
                 <widget class="QLabel" name="stableCsmUpdateIntervalLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating. A value of 10 is roughly 10 Hz at 100 FPS.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Stable CSM Refresh Interval</string>
@@ -1178,16 +1178,16 @@
                <item row="15" column="1">
                 <widget class="QSpinBox" name="stableCsmUpdateIntervalSpinBox">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating. A value of 10 is roughly 10 Hz at 100 FPS.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="minimum">
-                  <number>1</number>
+                  <number>6</number>
                  </property>
                  <property name="maximum">
                   <number>60</number>
                  </property>
                  <property name="value">
-                  <number>3</number>
+                  <number>10</number>
                  </property>
                 </widget>
                </item>
