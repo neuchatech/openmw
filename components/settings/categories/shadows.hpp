@@ -48,8 +48,8 @@ namespace Settings
         SettingValue<float> mStableCsmSplitLambda{ mIndex, "Shadows", "stable csm split lambda",
             makeClampSanitizerFloat(0, 1) };
         SettingValue<bool> mStableCsmTexelSnapping{ mIndex, "Shadows", "stable csm texel snapping" };
-        SettingValue<int> mStableCsmUpdateInterval{ mIndex, "Shadows", "stable csm update interval",
-            makeClampSanitizerInt(6, 60) };
+        SettingValue<int> mStableCsmUpdateIntervalMilliseconds{ mIndex, "Shadows",
+            "stable csm update interval ms", makeClampSanitizerInt(16, 1000) };
         SettingValue<float> mStableCsmSunUpdateAngleThreshold{ mIndex, "Shadows",
             "stable csm sun update angle threshold", makeMaxSanitizerFloat(0) };
         SettingValue<bool> mActorShadows{ mIndex, "Shadows", "actor shadows" };

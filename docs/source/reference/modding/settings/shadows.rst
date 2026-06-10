@@ -292,14 +292,14 @@ Shadows Settings
    Snaps stable CSM cascade centers to shadow texel increments to reduce shimmering.
 
 .. omw-setting::
-   :title: stable csm update interval
+   :title: stable csm update interval ms
    :type: int
-   :range: 6 to 60
-   :default: 10
+   :range: 16 to 1000
+   :default: 100
 
-   Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating.
+   Minimum time in milliseconds between stable CSM shadow map refreshes after a cascade needs updating.
    Higher values reduce shadow-map churn, but can make shadows lag slightly while moving.
-   This value is measured in frames, so ``10`` is roughly 10 Hz at 100 FPS.
+   ``100`` updates at most 10 times per second.
 
 .. omw-setting::
    :title: stable csm sun update angle threshold

@@ -92,7 +92,7 @@ namespace SceneUtil
                 .mDistance = settings.mStableCsmDistance,
                 .mSplitLambda = settings.mStableCsmSplitLambda,
                 .mTexelSnapping = settings.mStableCsmTexelSnapping,
-                .mUpdateInterval = settings.mStableCsmUpdateInterval,
+                .mUpdateIntervalMilliseconds = settings.mStableCsmUpdateIntervalMilliseconds,
                 .mSunUpdateAngleThreshold = settings.mStableCsmSunUpdateAngleThreshold,
             });
         }

@@ -15,7 +15,7 @@ namespace SceneUtil
             float mDistance = 8192.f;
             float mSplitLambda = 0.65f;
             bool mTexelSnapping = true;
-            int mUpdateInterval = 1;
+            int mUpdateIntervalMilliseconds = 100;
             float mSunUpdateAngleThreshold = 0.25f;
         };
 

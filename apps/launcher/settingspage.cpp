@@ -271,7 +271,7 @@ bool Launcher::SettingsPage::loadSettings()
         }
         stableCsmDistanceSpinBox->setValue(static_cast<int>(std::round(Settings::shadows().mStableCsmDistance.get())));
         stableCsmSplitLambdaSpinBox->setValue(Settings::shadows().mStableCsmSplitLambda);
-        stableCsmUpdateIntervalSpinBox->setValue(Settings::shadows().mStableCsmUpdateInterval);
+        stableCsmUpdateIntervalSpinBox->setValue(Settings::shadows().mStableCsmUpdateIntervalMilliseconds);
         stableCsmSunUpdateAngleThresholdSpinBox->setValue(Settings::shadows().mStableCsmSunUpdateAngleThreshold);
         aoRadiusSpinBox->setValue(Settings::shadows().mAoRadius);
         aoStrengthSpinBox->setValue(Settings::shadows().mAoStrength);
@@ -500,7 +500,7 @@ void Launcher::SettingsPage::saveSettings()
         Settings::shadows().mStableCsmDistance.set(stableCsmDistanceSpinBox->value());
         Settings::shadows().mStableCsmSplitLambda.set(stableCsmSplitLambdaSpinBox->value());
         Settings::shadows().mStableCsmTexelSnapping.set(stableCsmTexelSnappingCheckBox->checkState() != Qt::Unchecked);
-        Settings::shadows().mStableCsmUpdateInterval.set(stableCsmUpdateIntervalSpinBox->value());
+        Settings::shadows().mStableCsmUpdateIntervalMilliseconds.set(stableCsmUpdateIntervalSpinBox->value());
         Settings::shadows().mStableCsmSunUpdateAngleThreshold.set(stableCsmSunUpdateAngleThresholdSpinBox->value());
         Settings::shadows().mShadowSmallFeatureCulling.set(
             shadowSmallFeatureCullingCheckBox->checkState() != Qt::Unchecked);

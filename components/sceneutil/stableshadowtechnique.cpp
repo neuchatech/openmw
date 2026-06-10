@@ -1,5 +1,6 @@
 #include "stableshadowtechnique.hpp"
 
+#include <osg/FrameStamp>
 #include <osg/Timer>
 #include <osg/Uniform>
 #include <osgShadow/ShadowedScene>
@@ -203,7 +204,7 @@ namespace SceneUtil
         osg::Vec3d mLightDir;
         bool mLightDirValid = false;
         bool mRenderedOnce = false;
-        unsigned int mLastRefreshTraversal = 0;
+        double mLastRefreshTime = 0.0;
         unsigned int mNextCascadeRefreshIndex = 0;
         unsigned int mLastCasterMask = 0;
         unsigned int mLastCascadeCount = 0;
@@ -357,9 +358,12 @@ namespace SceneUtil
             || stableVdd->mLastDistance != mSettings.mDistance
             || stableVdd->mLastSplitLambda != mSettings.mSplitLambda
             || stableVdd->mLastTexelSnapping != mSettings.mTexelSnapping;
-        const unsigned int updateInterval = std::max(1, mSettings.mUpdateInterval);
+        const osg::FrameStamp* frameStamp = cv.getFrameStamp();
+        const double currentTime = frameStamp ? frameStamp->getReferenceTime()
+                                              : static_cast<double>(cv.getTraversalNumber()) / 60.0;
+        const double updateIntervalSeconds = std::max(0.0, mSettings.mUpdateIntervalMilliseconds / 1000.0);
         const bool intervalElapsed = !stableVdd->mRenderedOnce
-            || cv.getTraversalNumber() - stableVdd->mLastRefreshTraversal >= updateInterval;
+            || currentTime - stableVdd->mLastRefreshTime >= updateIntervalSeconds;
         bool refreshedAnyCascade = false;
 
         LightDataList& lights = vdd->getLightDataList();
@@ -540,7 +544,7 @@ namespace SceneUtil
         if (refreshedAnyCascade)
         {
             stableVdd->mRenderedOnce = true;
-            stableVdd->mLastRefreshTraversal = cv.getTraversalNumber();
+            stableVdd->mLastRefreshTime = currentTime;
             stableVdd->mLastCasterMask = casterMask;
             stableVdd->mLastCascadeCount = cascadeCount;
             stableVdd->mLastResolution = mSettings.mResolution;
