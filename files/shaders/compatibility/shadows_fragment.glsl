@@ -7,13 +7,18 @@
         uniform sampler2DShadow shadowTexture@shadow_texture_unit_index;
         varying vec4 shadowSpaceCoords@shadow_texture_unit_index;
 
+#if @stableShadowMaps
+        uniform float shadowCascadeNear@shadow_texture_unit_index;
+        uniform float shadowCascadeFar@shadow_texture_unit_index;
+#endif
+
 #if @perspectiveShadowMaps
         varying vec4 shadowRegionCoords@shadow_texture_unit_index;
 #endif
     @endforeach
 #endif // SHADOWS
 
-float unshadowedLightRatio(float distance)
+float unshadowedLightRatio(float distance, float viewDistance)
 {
     float shadowing = 1.0;
 #if SHADOWS
@@ -27,16 +32,27 @@ float unshadowedLightRatio(float distance)
         if (!doneShadows)
         {
             vec3 shadowXYZ = shadowSpaceCoords@shadow_texture_unit_index.xyz / shadowSpaceCoords@shadow_texture_unit_index.w;
+#if @stableShadowMaps
+            bool inShadowCascade = viewDistance >= shadowCascadeNear@shadow_texture_unit_index
+                && (viewDistance < shadowCascadeFar@shadow_texture_unit_index
+                    || @shadow_texture_unit_index == @stableShadowCascadeLastIndex);
+#else
+            bool inShadowCascade = true;
+#endif
 #if @perspectiveShadowMaps
             vec3 shadowRegionXYZ = shadowRegionCoords@shadow_texture_unit_index.xyz / shadowRegionCoords@shadow_texture_unit_index.w;
 #endif
-            if (all(lessThan(shadowXYZ, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.0, 0.0, 0.0))))
+            if (inShadowCascade && all(lessThan(shadowXYZ, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.0, 0.0, 0.0))))
             {
                 shadowing = min(shadow2DProj(shadowTexture@shadow_texture_unit_index, shadowSpaceCoords@shadow_texture_unit_index).r, shadowing);
 
+#if @stableShadowMaps
+                doneShadows = true;
+#else
                 doneShadows = all(lessThan(shadowXYZ, vec3(0.95, 0.95, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.05, 0.05, 0.0)));
 #if @perspectiveShadowMaps
                 doneShadows = doneShadows && all(lessThan(shadowRegionXYZ, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowRegionXYZ.xy, vec2(-1.0, -1.0)));
+#endif
 #endif
             }
         }
@@ -48,7 +64,12 @@ float unshadowedLightRatio(float distance)
     return shadowing;
 }
 
-void applyShadowDebugOverlay()
+float unshadowedLightRatio(float distance)
+{
+    return unshadowedLightRatio(distance, distance);
+}
+
+void applyShadowDebugOverlay(float viewDistance)
 {
 #if SHADOWS && @useShadowDebugOverlay
     bool doneOverlay = false;
@@ -57,10 +78,18 @@ void applyShadowDebugOverlay()
         if (!doneOverlay)
         {
             vec3 shadowXYZ = shadowSpaceCoords@shadow_texture_unit_index.xyz / shadowSpaceCoords@shadow_texture_unit_index.w;
+#if @stableShadowMaps
+            bool inShadowCascade = shadowCascadeNear@shadow_texture_unit_index <= 0.0
+                || (viewDistance >= shadowCascadeNear@shadow_texture_unit_index
+                    && (viewDistance < shadowCascadeFar@shadow_texture_unit_index
+                        || @shadow_texture_unit_index == @stableShadowCascadeLastIndex));
+#else
+            bool inShadowCascade = true;
+#endif
 #if @perspectiveShadowMaps
             vec3 shadowRegionXYZ = shadowRegionCoords@shadow_texture_unit_index.xyz / shadowRegionCoords@shadow_texture_unit_index.w;
 #endif
-            if (all(lessThan(shadowXYZ, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.0, 0.0, 0.0))))
+            if (inShadowCascade && all(lessThan(shadowXYZ, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.0, 0.0, 0.0))))
             {
                 colourIndex = mod(@shadow_texture_unit_index.0, 3.0);
                 if (colourIndex < 1.0)
@@ -70,9 +99,13 @@ void applyShadowDebugOverlay()
                 else
                     gl_FragData[0].z += 0.1;
 
+#if @stableShadowMaps
+                doneOverlay = true;
+#else
                 doneOverlay = all(lessThan(shadowXYZ, vec3(0.95, 0.95, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.05, 0.05, 0.0)));
 #if @perspectiveShadowMaps
                 doneOverlay = doneOverlay && all(lessThan(shadowRegionXYZ.xyz, vec3(1.0, 1.0, 1.0))) && all(greaterThan(shadowRegionXYZ.xy, vec2(-1.0, -1.0)));
+#endif
 #endif
             }
         }

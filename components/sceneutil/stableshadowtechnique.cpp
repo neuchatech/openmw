@@ -1,6 +1,7 @@
 #include "stableshadowtechnique.hpp"
 
 #include <osg/Timer>
+#include <osg/Uniform>
 #include <osgShadow/ShadowedScene>
 
 #include <components/debug/debuglog.hpp>
@@ -8,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <string>
 #include <vector>
 
 namespace
@@ -153,6 +155,27 @@ namespace
     {
         return std::abs(lhs - rhs) > std::max(0.001, std::max(std::abs(lhs), std::abs(rhs)) * 0.0001);
     }
+
+    void setFloatUniform(SceneUtil::MWShadowTechnique::Uniforms& uniforms, const std::string& name, float value)
+    {
+        osg::ref_ptr<osg::Uniform> target;
+        for (const osg::ref_ptr<osg::Uniform>& uniform : uniforms)
+        {
+            if (uniform->getName() == name)
+            {
+                target = uniform;
+                break;
+            }
+        }
+
+        if (!target)
+        {
+            target = new osg::Uniform(name.c_str(), value);
+            uniforms.push_back(target);
+        }
+        else
+            target->set(value);
+    }
 }
 
 namespace SceneUtil
@@ -211,6 +234,20 @@ namespace SceneUtil
     MWShadowTechnique::ViewDependentData* StableShadowTechnique::createViewDependentData(osgUtil::CullVisitor* /*cv*/)
     {
         return new StableViewDependentData(this);
+    }
+
+    void StableShadowTechnique::assignShadowStateSettings(
+        osgUtil::CullVisitor& cv, osg::Camera* camera, unsigned int sm_i, Uniforms& uniforms)
+    {
+        MWShadowTechnique::assignShadowStateSettings(cv, camera, sm_i, uniforms);
+
+        StableViewDependentData* stableVdd = dynamic_cast<StableViewDependentData*>(getViewDependentData(&cv));
+        if (!stableVdd || sm_i >= stableVdd->mCascades.size())
+            return;
+
+        const StableViewDependentData::Cascade& cascade = stableVdd->mCascades[sm_i];
+        setFloatUniform(uniforms, "shadowCascadeNear" + std::to_string(sm_i), static_cast<float>(cascade.mNear));
+        setFloatUniform(uniforms, "shadowCascadeFar" + std::to_string(sm_i), static_cast<float>(cascade.mFar));
     }
 
     void StableShadowTechnique::cull(osgUtil::CullVisitor& cv)

@@ -268,5 +268,5 @@ vec2 screenCoords = gl_FragCoord.xy / screenRes;
     gl_FragData[1].xyz = viewNormal * 0.5 + 0.5;
 #endif
 
-    applyShadowDebugOverlay();
+    applyShadowDebugOverlay(-passViewPos.z);
 }

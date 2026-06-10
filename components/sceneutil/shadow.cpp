@@ -7,6 +7,8 @@
 #include <components/settings/categories/shadows.hpp>
 #include <components/stereo/stereomanager.hpp>
 
+#include <string>
+
 #include "mwshadowtechnique.hpp"
 #include "stableshadowtechnique.hpp"
 
@@ -193,6 +195,11 @@ namespace SceneUtil
         // switch this to reading settings if it's ever exposed to the user
         definesWithShadows["perspectiveShadowMaps"]
             = mShadowSettings->getShadowMapProjectionHint() == ShadowSettings::PERSPECTIVE_SHADOW_MAP ? "1" : "0";
+        const bool stableCsm = Misc::StringUtils::ciEqual(settings.mShadowMappingMethod.get(), "stable csm");
+        definesWithShadows["stableShadowMaps"] = stableCsm ? "1" : "0";
+        definesWithShadows["stableShadowCascadeLastIndex"] = stableCsm && mShadowSettings->getNumShadowMapsPerLight() > 0
+            ? std::to_string(mShadowSettings->getNumShadowMapsPerLight() - 1)
+            : "0";
 
         definesWithShadows["disableNormalOffsetShadows"] = settings.mNormalOffsetDistance == 0.0 ? "1" : "0";
 
@@ -214,6 +221,10 @@ namespace SceneUtil
         definesWithoutShadows["useShadowDebugOverlay"] = "0";
 
         definesWithoutShadows["perspectiveShadowMaps"] = "0";
+
+        definesWithoutShadows["stableShadowMaps"] = "0";
+
+        definesWithoutShadows["stableShadowCascadeLastIndex"] = "0";
 
         definesWithoutShadows["disableNormalOffsetShadows"] = "0";
 

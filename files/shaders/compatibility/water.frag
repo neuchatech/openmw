@@ -96,7 +96,7 @@ void main(void)
 {
     vec2 UV = worldPos.xy / (8192.0*5.0) * 3.0;
 
-    float shadow = unshadowedLightRatio(linearDepth);
+    float shadow = unshadowedLightRatio(linearDepth, -viewSpacePos.z);
 
     vec2 screenCoords = gl_FragCoord.xy / screenRes;
 
@@ -248,5 +248,5 @@ void main(void)
     gl_FragData[1].rgb = normalize(gl_NormalMatrix * normal) * 0.5 + 0.5;
 #endif
 
-    applyShadowDebugOverlay();
+    applyShadowDebugOverlay(-viewSpacePos.z);
 }

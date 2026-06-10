@@ -68,7 +68,13 @@ void main()
     vec3 viewNormal = normalToView(normalize(passNormal));
 #endif
 
-    float shadowing = unshadowedLightRatio(linearDepth);
+#if PER_PIXEL_LIGHTING
+    float shadowDistance = -passViewPos.z;
+#else
+    float shadowDistance = linearDepth;
+#endif
+
+    float shadowing = unshadowedLightRatio(linearDepth, shadowDistance);
 
     vec3 lighting;
 #if !PER_PIXEL_LIGHTING
@@ -92,5 +98,5 @@ void main()
     gl_FragData[1].xyz = viewNormal * 0.5 + 0.5;
 #endif
 
-    applyShadowDebugOverlay();
+    applyShadowDebugOverlay(shadowDistance);
 }

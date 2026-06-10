@@ -85,7 +85,7 @@ void main()
     vec3 viewNormal = normalize(gl_NormalMatrix * passNormal);
 #endif
 
-    float shadowing = unshadowedLightRatio(linearDepth);
+    float shadowing = unshadowedLightRatio(linearDepth, -passViewPos.z);
     vec3 diffuseLight, ambientLight, specularLight;
     doLighting(passViewPos, viewNormal, gl_FrontMaterial.shininess, shadowing, diffuseLight, ambientLight, specularLight);
     vec3 diffuse = diffuseColor.xyz * diffuseLight;
@@ -112,5 +112,5 @@ void main()
     gl_FragData[1].xyz = viewNormal * 0.5 + 0.5;
 #endif
 
-    applyShadowDebugOverlay();
+    applyShadowDebugOverlay(-passViewPos.z);
 }

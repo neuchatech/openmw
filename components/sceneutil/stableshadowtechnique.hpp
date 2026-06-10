@@ -28,6 +28,9 @@ namespace SceneUtil
 
         void setStableSettings(const Settings& settings);
 
+        void assignShadowStateSettings(
+            osgUtil::CullVisitor& cv, osg::Camera* camera, unsigned int sm_i, Uniforms& uniforms) override;
+
     protected:
         virtual ~StableShadowTechnique();
 
