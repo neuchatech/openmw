@@ -294,8 +294,8 @@ Shadows Settings
 .. omw-setting::
    :title: stable csm update interval
    :type: int
-   :range: 1 to 60
-   :default: 3
+   :range: 6 to 60
+   :default: 6
 
    Minimum number of frames between stable CSM shadow map refreshes after a cascade needs updating.
    Higher values reduce shadow-map churn, but can make shadows lag slightly while moving.

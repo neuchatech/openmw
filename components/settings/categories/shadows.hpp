@@ -49,7 +49,7 @@ namespace Settings
             makeClampSanitizerFloat(0, 1) };
         SettingValue<bool> mStableCsmTexelSnapping{ mIndex, "Shadows", "stable csm texel snapping" };
         SettingValue<int> mStableCsmUpdateInterval{ mIndex, "Shadows", "stable csm update interval",
-            makeClampSanitizerInt(1, 60) };
+            makeClampSanitizerInt(6, 60) };
         SettingValue<float> mStableCsmSunUpdateAngleThreshold{ mIndex, "Shadows",
             "stable csm sun update angle threshold", makeMaxSanitizerFloat(0) };
         SettingValue<bool> mActorShadows{ mIndex, "Shadows", "actor shadows" };

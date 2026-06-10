@@ -36,7 +36,8 @@ call "%vcvars%"
 
 :build
 echo Building OpenMW and Launcher from MSVC2022_64_Ninja...
-cmake --build MSVC2022_64_Ninja --parallel --config Release --target openmw openmw-launcher
+if not defined OPENMW_BUILD_PARALLEL set "OPENMW_BUILD_PARALLEL=4"
+cmake --build MSVC2022_64_Ninja --parallel %OPENMW_BUILD_PARALLEL% --config Release --target openmw openmw-launcher
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ****************************************

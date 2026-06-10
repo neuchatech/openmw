@@ -505,8 +505,9 @@ void Launcher::SettingsPage::saveSettings()
         Settings::shadows().mShadowSmallFeatureCulling.set(
             shadowSmallFeatureCullingCheckBox->checkState() != Qt::Unchecked);
         Settings::shadows().mEnableShadowCascadeStats.set(shadowCascadeStatsCheckBox->checkState() != Qt::Unchecked);
-        Settings::shadows().mEnableAmbientOcclusion.set(ambientOcclusionCheckBox->checkState() != Qt::Unchecked);
-        Settings::shadows().mAoMethod.set("contact");
+        const bool ambientOcclusionEnabled = ambientOcclusionCheckBox->checkState() != Qt::Unchecked;
+        Settings::shadows().mEnableAmbientOcclusion.set(ambientOcclusionEnabled);
+        Settings::shadows().mAoMethod.set(ambientOcclusionEnabled ? "contact" : "none");
         Settings::shadows().mAoRadius.set(aoRadiusSpinBox->value());
         Settings::shadows().mAoStrength.set(aoStrengthSpinBox->value());
         Settings::shadows().mAoSampleCount.set(aoSampleCountSpinBox->value());
