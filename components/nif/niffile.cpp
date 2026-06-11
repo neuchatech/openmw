@@ -41,7 +41,7 @@ namespace Nif
     static std::unique_ptr<Record> construct()
     {
         auto result = std::make_unique<NodeType>();
-        result->recType = recordType;
+        result->mRecordType = recordType;
         return result;
     }
 
@@ -699,9 +699,9 @@ namespace Nif
                 Log(Debug::Verbose) << "NIF Debug: Reading record of type " << rec << ", index " << i;
 
             assert(r != nullptr);
-            assert(r->recType != RC_MISSING);
-            r->recName = std::move(rec);
-            r->recIndex = static_cast<unsigned>(i);
+            assert(r->mRecordType != RC_MISSING);
+            r->mRecordName = std::move(rec);
+            r->mRecordIndex = static_cast<unsigned>(i);
             r->read(&nif);
             mRecords.push_back(std::move(r));
         }
@@ -709,6 +709,8 @@ namespace Nif
         // Determine which records are roots
         const std::uint32_t rootsCount = nif.get<uint32_t>();
         mRoots.reserve(rootsCount);
+        constexpr std::uint32_t maxDoesNotPointWarnings = 10;
+        std::uint32_t doesNotPointWarnings = 0;
         for (std::size_t i = 0; i < rootsCount; i++)
         {
             std::int32_t idx;
@@ -720,10 +722,17 @@ namespace Nif
             else
             {
                 mRoots.push_back(nullptr);
-                Log(Debug::Warning) << "NIFFile Warning: Root " << i + 1 << " does not point to a record: index " << idx
-                                    << ". File: " << mFilename;
+                ++doesNotPointWarnings;
+                if (doesNotPointWarnings <= maxDoesNotPointWarnings)
+                {
+                    Log(Debug::Warning) << "NIFFile Warning: Root " << i + 1 << " does not point to a record: index "
+                                        << idx << ". File: " << mFilename;
+                }
             }
         }
+        if (doesNotPointWarnings > maxDoesNotPointWarnings)
+            Log(Debug::Warning) << "NIFFile Warning: " << doesNotPointWarnings - maxDoesNotPointWarnings
+                                << " more roots did not point to a record. File: " << mFilename;
 
         // Once parsing is done, do post-processing.
         for (const auto& record : mRecords)

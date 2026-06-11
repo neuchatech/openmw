@@ -11,6 +11,12 @@ it does not include Bethesda game data.
 V1 Focus
 --------
 
+* Version: 0.52.0
+* License: GPLv3 (see [LICENSE](https://gitlab.com/OpenMW/openmw/-/raw/master/LICENSE) for more information)
+* Website: https://www.openmw.org
+* IRC: #openmw on irc.libera.chat
+* Discord: https://discord.gg/bWuqq2e
+
 This fork aims to make Morrowind feel wider, sharper, and more physical while
 keeping the OpenMW foundation intact.
 

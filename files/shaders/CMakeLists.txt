@@ -23,8 +23,11 @@ set(SHADER_FILES
     lib/core/vertex.glsl
     lib/core/vertex.h.glsl
     lib/core/vertex_multiview.glsl
-    lib/light/lighting.glsl
-    lib/light/lighting_util.glsl
+    lib/light/bindings.glsl
+    lib/light/bindings-legacy.glsl
+    lib/light/clamp.glsl
+    lib/light/util.glsl
+    lib/light/struct.glsl
     lib/sky/passes.glsl
     lib/material/parallax.glsl
     lib/material/alpha.glsl
@@ -39,6 +42,8 @@ set(SHADER_FILES
     compatibility/objects.frag
     compatibility/terrain.vert
     compatibility/terrain.frag
+    compatibility/terrain_composite.vert
+    compatibility/terrain_composite.frag
     compatibility/shadows_vertex.glsl
     compatibility/shadows_fragment.glsl
     compatibility/shadowcasting.vert
@@ -47,6 +52,8 @@ set(SHADER_FILES
     compatibility/normals.glsl
     compatibility/multiview_resolve.vert
     compatibility/multiview_resolve.frag
+    compatibility/outline.frag
+    compatibility/outline.vert
     compatibility/depthclipped.vert
     compatibility/depthclipped.frag
     compatibility/gui.vert
@@ -67,6 +74,8 @@ set(SHADER_FILES
     core/ripples_simulate.comp
     core/gui.frag
     core/gui.vert
+    core/lighting/cluster.comp
+    core/lighting/cull.comp
 )
 
 copy_all_resource_files(${CMAKE_CURRENT_SOURCE_DIR} ${OPENMW_RESOURCES_ROOT} ${DDIRRELATIVE} "${SHADER_FILES}")

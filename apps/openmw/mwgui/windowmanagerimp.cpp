@@ -12,6 +12,7 @@
 #include <MyGUI_FactoryManager.h>
 #include <MyGUI_InputManager.h>
 #include <MyGUI_LanguageManager.h>
+#include <MyGUI_LayerManager.h>
 #include <MyGUI_PointerManager.h>
 #include <MyGUI_UString.h>
 
@@ -149,7 +150,7 @@ namespace MWGui
     WindowManager::WindowManager(SDL_Window* window, osgViewer::Viewer* viewer, osg::Group* guiRoot,
         Resource::ResourceSystem* resourceSystem, SceneUtil::WorkQueue* workQueue, const std::filesystem::path& logpath,
         bool consoleOnlyScripts, Translation::Storage& translationDataStorage, ToUTF8::FromType encoding,
-        bool exportFonts, const std::string& versionDescription, bool useShaders, Files::ConfigurationManager& cfgMgr)
+        bool exportFonts, const std::string& versionDescription, Files::ConfigurationManager& cfgMgr)
         : mOldUpdateMask(0)
         , mOldCullMask(0)
         , mStore(nullptr)
@@ -303,8 +304,7 @@ namespace MWGui
         mVideoWrapper = std::make_unique<SDLUtil::VideoWrapper>(window, viewer);
         mVideoWrapper->setGammaContrast(Settings::video().mGamma, Settings::video().mContrast);
 
-        if (useShaders)
-            mGuiPlatform->getRenderManagerPtr()->enableShaders(mResourceSystem->getSceneManager()->getShaderManager());
+        mGuiPlatform->getRenderManagerPtr()->enableShaders(mResourceSystem->getSceneManager()->getShaderManager());
 
         mStatsWatcher = std::make_unique<StatsWatcher>();
     }
@@ -988,6 +988,10 @@ namespace MWGui
         MWBase::Environment::get().getInputManager()->setGamepadGuiCursorEnabled(
             mGuiModeStates[mode].mWindows[activeIndex]->isGamepadCursorAllowed());
 
+        WindowBase* activeWindow = mGuiModeStates[mode].mWindows[activeIndex];
+        if (activeWindow->isVisible())
+            MyGUI::LayerManager::getInstance().upLayerItem(activeWindow->mMainWidget);
+
         updateControllerButtonsOverlay();
         setCursorActive(false);
 
@@ -1360,6 +1364,8 @@ namespace MWGui
         // Re-apply any controller-specific window changes.
         reapplyActiveControllerWindow();
 
+        MWBase::Environment::get().getLuaManager()->viewportResized(x, y);
+
         // TODO: check if any windows are now off-screen and move them back if so
     }
 
@@ -1442,11 +1448,17 @@ namespace MWGui
         if (Settings::gui().mControllerMenus)
         {
             if (mode == GM_Container)
-                mActiveControllerWindows[mode] = 0; // Ensure controller focus is on container
-            // Activate first visible window. This needs to be called after updateVisible.
-            if (mActiveControllerWindows[mode] != 0)
-                mActiveControllerWindows[mode] = mActiveControllerWindows[mode] - 1;
-            cycleActiveControllerWindow(true);
+            {
+                // Ensure controller focus is on container when entering container mode.
+                setActiveControllerWindow(mode, 0);
+            }
+            else
+            {
+                // Activate first visible window. This needs to be called after updateVisible.
+                if (mActiveControllerWindows[mode] != 0)
+                    mActiveControllerWindows[mode] = mActiveControllerWindows[mode] - 1;
+                cycleActiveControllerWindow(true);
+            }
         }
     }
 
@@ -1869,10 +1881,26 @@ namespace MWGui
 
     void WindowManager::onKeyFocusChanged(MyGUI::Widget* widget)
     {
-        bool isEditBox = widget && widget->castType<MyGUI::EditBox>(false);
-        LuaUi::WidgetExtension* luaWidget = dynamic_cast<LuaUi::WidgetExtension*>(widget);
-        bool capturesInput = luaWidget ? luaWidget->isTextInput() : isEditBox;
-        if (widget && capturesInput)
+        bool capturesInput = false;
+        if (widget)
+        {
+            LuaUi::WidgetExtension* luaWidget = dynamic_cast<LuaUi::WidgetExtension*>(widget);
+            if (luaWidget)
+                capturesInput = luaWidget->isTextInput();
+            else
+                capturesInput = widget->castType<MyGUI::EditBox>(false);
+        }
+
+        // The SDL_IsTextInputActive() check helps to avoid duplicate calls in SDL2.
+        // This may no longer be required when switching to SDL3 where the function
+        // has also been renamed to SDL_TextInputActive() and returns bool instead
+        // of SDL_bool.
+
+        const bool inputActive = SDL_IsTextInputActive() == SDL_TRUE;
+        if (capturesInput == inputActive)
+            return;
+
+        if (capturesInput)
             SDL_StartTextInput();
         else
             SDL_StopTextInput();
@@ -2073,6 +2101,9 @@ namespace MWGui
         setKeyFocusWidget(mVideoWidget);
 
         mVideoBackground->setVisible(true);
+
+        if (mInputBlocker)
+            mInputBlocker->setVisible(false);
 
         bool cursorWasVisible = mCursorVisible;
         setCursorVisible(false);
@@ -2703,5 +2734,11 @@ namespace MWGui
         }
         else
             mInventoryTabsOverlay->setVisible(false);
+    }
+
+    void WindowManager::inventoryUpdated(const MWWorld::Ptr& ptr) const
+    {
+        for (const auto& window : mWindows)
+            window->onInventoryUpdate(ptr);
     }
 }

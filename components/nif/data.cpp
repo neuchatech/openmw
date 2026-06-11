@@ -29,9 +29,6 @@ namespace Nif
             void operator()(NIFStream& stream, std::vector<osg::Vec2f>& value) const
             {
                 stream.readVector(value, mNumVertices);
-                // Flip the texture coordinates to convert them to the OpenGL convention of bottom-left image origin
-                for (osg::Vec2f& uv : value)
-                    uv.y() = 1.f - uv.y();
             }
         };
 
@@ -95,7 +92,7 @@ namespace Nif
         nif->read(mNumVertices);
 
         bool isPSysData = false;
-        switch (recType)
+        switch (mRecordType)
         {
             case RC_NiPSysData:
             case RC_NiMeshPSysData:
@@ -599,7 +596,7 @@ namespace Nif
         nif->read(mNumVertices);
         nif->readVectorOfRecords<uint32_t>(mBlockInfos);
         const ReadNiAdditionalGeometryDataDataBlock readDataBlock{ .mBSPacked
-            = recType == RC_BSPackedAdditionalGeometryData };
+            = mRecordType == RC_BSPackedAdditionalGeometryData };
         nif->readVectorOfRecords<uint32_t>(readDataBlock, mBlocks);
     }
 

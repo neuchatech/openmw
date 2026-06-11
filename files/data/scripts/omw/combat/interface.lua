@@ -13,16 +13,26 @@ local onHitHandlers = {}
 -- @field #string Unspecified
 
 ---
+-- Table of possible attack types
+-- @type AttackType
+-- @field #number Chop
+-- @field #number Slash
+-- @field #number Thrust
+
+---
 -- @type AttackInfo
 -- @field [parent=#AttackInfo] #table damage A table mapping a stat name (health, fatigue, or magicka) to a number. For example, {health = 50, fatigue = 10} will cause 50 damage to health and 10 to fatigue (before adjusting for armor and difficulty). This field is ignored for failed attacks.
 -- @field [parent=#AttackInfo] #number strength A number between 0 and 1 representing the attack strength. This field is ignored for failed attacks.
 -- @field [parent=#AttackInfo] #boolean successful Whether the attack was successful or not.
 -- @field [parent=#AttackInfo] #AttackSourceType sourceType What class of attack this is.
--- @field [parent=#AttackInfo] openmw.self#ATTACK_TYPE type (Optional) Attack variant if applicable. For melee attacks this represents chop vs thrust vs slash. For unarmed creatures this implies which of its 3 possible attacks were used. For other attacks this field can be ignored.
+-- @field [parent=#AttackInfo] #AttackType type (Optional) Attack variant if applicable. For melee attacks this represents chop vs thrust vs slash. For unarmed creatures this implies which of its 3 possible attacks were used. For other attacks this field can be ignored.
 -- @field [parent=#AttackInfo] openmw.types#Actor attacker (Optional) Attacking actor
 -- @field [parent=#AttackInfo] openmw.types#Weapon weapon (Optional) Attacking weapon
 -- @field [parent=#AttackInfo] #string ammo (Optional) Ammo record ID
 -- @field [parent=#AttackInfo] openmw.util#Vector3 hitPos (Optional) Where on the victim the attack is landing. Used to spawn blood effects. Blood effects are skipped if nil.
+-- @field [parent=#AttackInfo] #boolean ignoreArmor (Optional) Whether to ignore armor.
+-- @field [parent=#AttackInfo] #boolean ignoreDifficulty (Optional) Whether to ignore difficulty scaling.
+-- @field [parent=#AttackInfo] #boolean muteSound (Optional) If true, does not play miss or damage sounds.
 return {
     --- Basic combat interface
     -- @module Combat
@@ -44,7 +54,7 @@ return {
     interface = {
         --- Interface version
         -- @field [parent=#Combat] #number version
-        version = 1,
+        version = 2,
 
         --- Add new onHit handler for this actor
         -- If `handler(attack)` returns false, other handlers for
@@ -87,7 +97,7 @@ return {
         -- @return #number
         getArmorRating = function(actor) return 0 end,
 
-        --- Computes this character's armor rating.
+        --- Computes this item's armor skill.
         -- You can override this to return any skill you wish (including non-armor skills, if you so wish).
         -- Note that this interface function is read by the engine to update the UI.
         -- This function can still be overridden same as any other interface, but must not call any functions or interfaces that modify anything.
@@ -136,6 +146,14 @@ return {
             Melee = 'melee',
             Ranged = 'ranged',
             Unspecified = 'unspecified',
+        }),
+
+        --- @{#AttackType}
+        -- @field [parent=#Combat] #AttackType ATTACK_TYPES Available attack types
+        ATTACK_TYPES = util.makeStrictReadOnly({
+            Chop = 0,
+            Slash = 1,
+            Thrust = 2,
         }),
     },
 

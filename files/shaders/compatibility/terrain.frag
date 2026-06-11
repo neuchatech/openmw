@@ -1,9 +1,5 @@
 #version 120
 
-#if @useUBO
-    #extension GL_ARB_uniform_buffer_object : require
-#endif
-
 #if @useGPUShader4
     #extension GL_EXT_gpu_shader4: require
 #endif
@@ -35,13 +31,12 @@ varying vec3 passViewPos;
 varying vec3 passNormal;
 
 
-
 #include "lib/core/fragment.h.glsl"
-#include "fog.glsl"
 #include "vertexcolors.glsl"
 #include "shadows_fragment.glsl"
-#include "lib/light/lighting.glsl"
+#include "lib/light/clamp.glsl"
 #include "lib/material/parallax.glsl"
+#include "fog.glsl"
 #include "compatibility/normals.glsl"
 
 void main()
@@ -88,12 +83,12 @@ void main()
     vec3 specularColor = getSpecularColor().xyz;
 #endif
     vec3 diffuseLight, ambientLight, specularLight;
-    doLighting(passViewPos, viewNormal, shininess, shadowing, diffuseLight, ambientLight, specularLight);
+    doLighting(gl_FragCoord.xy, passViewPos, viewNormal, shininess, shadowing, diffuseLight, ambientLight, specularLight);
     lighting = diffuseColor.xyz * diffuseLight + getAmbientColor().xyz * ambientLight + getEmissionColor().xyz;
     specular = specularColor * specularLight;
 #endif
 
-    clampLightingResult(lighting);
+    clampLighting(lighting);
     gl_FragData[0].xyz = gl_FragData[0].xyz * lighting + specular;
 
     gl_FragData[0] = applyFogAtPos(gl_FragData[0], passViewPos, far);

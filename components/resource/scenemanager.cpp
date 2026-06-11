@@ -452,8 +452,23 @@ namespace Resource
         , mMagFilter(osg::Texture::LINEAR)
         , mMaxAnisotropy(1.f)
         , mParticleSystemMask(~0u)
-        , mLightingMethod(SceneUtil::LightingMethod::FFP)
     {
+    }
+
+    void SceneManager::recreateShaders(
+        osg::ref_ptr<osg::Node> node, const std::string& shaderPrefix, const osg::Program* programTemplate)
+    {
+        osg::ref_ptr<Shader::ShaderVisitor> shaderVisitor(createShaderVisitor(shaderPrefix));
+        shaderVisitor->setAllowedToModifyStateSets(false);
+        shaderVisitor->setProgramTemplate(programTemplate);
+        node->accept(*shaderVisitor);
+    }
+
+    void SceneManager::reinstateRemovedState(osg::ref_ptr<osg::Node> node)
+    {
+        osg::ref_ptr<Shader::ReinstateRemovedStateVisitor> reinstateRemovedStateVisitor
+            = new Shader::ReinstateRemovedStateVisitor(false);
+        node->accept(*reinstateRemovedStateVisitor);
     }
 
     void SceneManager::setForceShaders(bool force)
@@ -464,24 +479,6 @@ namespace Resource
     bool SceneManager::getForceShaders() const
     {
         return mForceShaders;
-    }
-
-    void SceneManager::recreateShaders(osg::ref_ptr<osg::Node> node, const std::string& shaderPrefix,
-        bool forceShadersForNode, const osg::Program* programTemplate)
-    {
-        osg::ref_ptr<Shader::ShaderVisitor> shaderVisitor(createShaderVisitor(shaderPrefix));
-        shaderVisitor->setAllowedToModifyStateSets(false);
-        shaderVisitor->setProgramTemplate(programTemplate);
-        if (forceShadersForNode)
-            shaderVisitor->setForceShaders(true);
-        node->accept(*shaderVisitor);
-    }
-
-    void SceneManager::reinstateRemovedState(osg::ref_ptr<osg::Node> node)
-    {
-        osg::ref_ptr<Shader::ReinstateRemovedStateVisitor> reinstateRemovedStateVisitor
-            = new Shader::ReinstateRemovedStateVisitor(false);
-        node->accept(*reinstateRemovedStateVisitor);
     }
 
     void SceneManager::setClampLighting(bool clamp)
@@ -519,36 +516,14 @@ namespace Resource
         mSpecularMapPattern = pattern;
     }
 
-    void SceneManager::setApplyLightingToEnvMaps(bool apply)
+    void SceneManager::setSupportsClusteredLighting(bool supported)
     {
-        mApplyLightingToEnvMaps = apply;
+        mSupportsClusteredLighting = supported;
     }
 
-    void SceneManager::setSupportedLightingMethods(const SceneUtil::LightManager::SupportedMethods& supported)
+    bool SceneManager::isClusteredLightingSupported() const
     {
-        mSupportedLightingMethods = supported;
-    }
-
-    bool SceneManager::isSupportedLightingMethod(SceneUtil::LightingMethod method) const
-    {
-        return mSupportedLightingMethods[static_cast<int>(method)];
-    }
-
-    void SceneManager::setLightingMethod(SceneUtil::LightingMethod method)
-    {
-        mLightingMethod = method;
-
-        if (mLightingMethod == SceneUtil::LightingMethod::SingleUBO)
-        {
-            osg::ref_ptr<osg::Program> program = new osg::Program;
-            program->addBindUniformBlock("LightBufferBinding", static_cast<int>(UBOBinding::LightBuffer));
-            mShaderManager->setProgramTemplate(program);
-        }
-    }
-
-    SceneUtil::LightingMethod SceneManager::getLightingMethod() const
-    {
-        return mLightingMethod;
+        return mSupportsClusteredLighting;
     }
 
     void SceneManager::setConvertAlphaTestToAlphaToCoverage(bool convert)
@@ -1248,7 +1223,6 @@ namespace Resource
         shaderVisitor->setNormalHeightMapPattern(mNormalHeightMapPattern);
         shaderVisitor->setAutoUseSpecularMaps(mAutoUseSpecularMaps);
         shaderVisitor->setSpecularMapPattern(mSpecularMapPattern);
-        shaderVisitor->setApplyLightingToEnvMaps(mApplyLightingToEnvMaps);
         shaderVisitor->setConvertAlphaTestToAlphaToCoverage(mConvertAlphaTestToAlphaToCoverage);
         shaderVisitor->setAdjustCoverageForAlphaTest(mAdjustCoverageForAlphaTest);
         shaderVisitor->setSupportsNormalsRT(mSupportsNormalsRT);
